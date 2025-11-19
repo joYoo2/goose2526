@@ -13,6 +13,17 @@ dependencies {
     implementation 'org.firstinspires.ftc:FtcCommon:11.0.0'
     implementation 'org.firstinspires.ftc:Vision:11.0.0'
 
+    // SolversLib
+    implementation "org.solverslib:core:0.3.3" // core
+    implementation "org.solverslib:pedroPathing:0.3.3" // pedroPathing
+
+    // Pedro Pathing
+    implementation 'com.pedropathing:ftc:2.0.4'
+    implementation 'com.pedropathing:telemetry:1.0.0'
+
+    // Panels Dashboard (latest: 1.0.2, working: 1.0.0)
+    implementation "com.bylazar:fullpanels:1.0.9"
+
     //noinspection GradleDependency
     implementation 'androidx.appcompat:appcompat:1.2.0'
 }
