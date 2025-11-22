@@ -1,6 +1,24 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
+
+    maven {
+        url = 'https://maven.brott.dev/'
+    }
+
+    maven {
+        url = 'https://maven.pedropathing.com'
+    }
+    maven {
+        url = 'https://mymaven.bylazar.com/releases'
+    }
+
+    maven {
+        url "https://repo.dairy.foundation/releases"
+    }
+    maven {
+        url "https://repo.dairy.foundation/snapshots"
+    }
 }
 
 dependencies {
@@ -27,3 +45,4 @@ dependencies {
     //noinspection GradleDependency
     implementation 'androidx.appcompat:appcompat:1.2.0'
 }
+

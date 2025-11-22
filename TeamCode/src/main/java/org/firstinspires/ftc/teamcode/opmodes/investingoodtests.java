@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 import com.bylazar.gamepad.*;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -17,8 +16,12 @@ import com.seattlesolvers.solverslib.drivebase.MecanumDrive;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
+import org.firstinspires.ftc.teamcode.yooyoontitled.Globe;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
+import org.firstinspires.ftc.teamcode.yooyoontitled.commands.AutoShoot;
+import org.firstinspires.ftc.teamcode.yooyoontitled.commands.littleoutshoot;
 
+import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 @TeleOp(name = "lets do something cool OP")
 public class investingoodtests extends CommandOpMode{
     public GamepadEx driver, driver2;
@@ -41,6 +44,9 @@ public class investingoodtests extends CommandOpMode{
         elapsedtime = new ElapsedTime();
         elapsedtime.reset();
 
+        robot.stopperServo.set(0.45);
+
+
         driver = new GamepadEx(gamepad1);
         driver2 = new GamepadEx(gamepad2);
         drive = new MecanumDrive(robot.leftFront, robot.rightFront, robot.leftRear, robot.rightRear);
@@ -49,18 +55,74 @@ public class investingoodtests extends CommandOpMode{
         //robot.initHasMovement();
 
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenHeld(
-                new InstantCommand(() -> robot.intake.set(1))
+                new SequentialCommandGroup(
+                        new InstantCommand(() -> robot.stopperServo.set(0.1)),
+                    new InstantCommand(() -> robot.intake.set(1)))
         );
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenReleased(
-                new InstantCommand(() -> robot.intake.set(0))
+                new InstantCommand(() -> robot.intake.set(0.1))
         );
 
         driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(
                 new InstantCommand(() -> robot.intake.set(-1))
         );
         driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenReleased(
-                new InstantCommand(() -> robot.intake.set(0))
+                new InstantCommand(() -> robot.intake.set(0.1))
         );
+
+        driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whileHeld(
+
+                new ParallelCommandGroup(
+                        new AutoShoot()
+                )
+        );
+
+        driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenReleased(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.intake.set(0.1))
+                )
+        );
+        driver.getGamepadButton(GamepadKeys.Button.CIRCLE).whenPressed(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> Globe.shot = false)
+                )
+        );
+        driver.getGamepadButton(GamepadKeys.Button.CIRCLE).whileHeld(
+                new ParallelCommandGroup(
+                        new littleoutshoot()
+                )
+        );
+
+        driver.getGamepadButton(GamepadKeys.Button.CIRCLE).whenReleased(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.intake.set(0.1))
+                )
+        );
+
+
+
+
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
+                new InstantCommand(() -> robot.rampServo.set(0.45))
+        );
+
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+                new InstantCommand(() -> robot.rampServo.set(robot.rampServo.get()+0.1))
+        );
+
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
+                new InstantCommand(() -> robot.rampServo.set(robot.rampServo.get()-0.1))
+        );
+
+        if(robot.shooterMotor.getVelocity() > 100){
+
+            robot.light.setPosition(0.5);//green
+        }else{
+            robot.light.setPosition(0.28); //red
+        }
+
 
         super.run();
     }
@@ -71,7 +133,6 @@ public class investingoodtests extends CommandOpMode{
         // This is like the init but when the program is actually started
         if (gameTimer == null) {
             robot.initHasMovement();
-
             gameTimer = new ElapsedTime();
         }
 
@@ -85,8 +146,14 @@ public class investingoodtests extends CommandOpMode{
         );
 
         telemetry.addData("Status", "Running");
-        telemetry.addData("loop times", elapsedtime.milliseconds());
+        //telemetry.addData("loop times", elapsedtime.milliseconds());
+        telemetry.addData("servo", robot.rampServo.get());
+        telemetry.addData("stopper", robot.stopperServo.get());
+        telemetry.addData("motor speed", robot.shooterMotor.getVelocity());
+        telemetry.addData("digaierg right", shooterReady);
         elapsedtime.reset();
+
+        telemetry.update();
 
         telemetry.update();
 

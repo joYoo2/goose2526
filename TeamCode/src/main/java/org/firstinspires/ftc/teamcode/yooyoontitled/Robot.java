@@ -7,17 +7,29 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
+import com.seattlesolvers.solverslib.command.ConditionalCommand;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.hardware.SimpleServo;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
+
 import java.util.List;
 public class Robot {
     public MotorEx leftFront, leftRear, rightRear, rightFront; //drivetrain wheels
-    public MotorEx Shooter;
+    public MotorEx shooterMotor;
+    public Motor.Encoder shooterEncoder;
+
+    public shooter shooter;
+
     public MotorEx intake;
+
+    public ServoEx rampServo, stopperServo;
+
+    public Servo light;
 
     public Follower follower;
     public PoseTracker poseUpdater;
@@ -44,9 +56,33 @@ public class Robot {
         rightRear = new MotorEx(hardwareMap, "rightRear", Motor.GoBILDA.RPM_435);
         leftRear = new MotorEx(hardwareMap, "leftRear", Motor.GoBILDA.RPM_435);
 
+        rightFront.setInverted(true);
+        rightRear.setInverted(true);
+        leftFront.setInverted(true);
+        leftRear.setInverted(true);
+
+
         intake = new MotorEx(hardwareMap, "intake", Motor.GoBILDA.RPM_1150);
         intake.setRunMode(Motor.RunMode.RawPower);
+        intake.setInverted(true);
 
+
+        shooterMotor = new MotorEx(hardwareMap, "shooter", Motor.GoBILDA.BARE);
+        shooterMotor.setRunMode(Motor.RunMode.RawPower);
+        shooterMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooterMotor.setInverted(true);
+
+        shooterEncoder = new Motor(hardwareMap, "shooter").encoder;
+
+
+        stopperServo = new ServoEx(hardwareMap, "stopper");
+        rampServo = new ServoEx(hardwareMap, "angle");
+
+
+        light = hardwareMap.get(Servo.class, "light");
+
+
+        shooter = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter();
 
         //for optimizing loop times
         // Bulk reading enabled!
@@ -60,11 +96,13 @@ public class Robot {
                 ControlHub = hub;
             }
         }
+
+
     }
 
     /// RUN WHATEVER IS IN THE INIT METHODS IN THE SUBSYSTEMS!!
     public void initHasMovement() {
-        //intake.init();
+        shooter.init();
         //kickServo.setPosition(0.5);
     }
 }
