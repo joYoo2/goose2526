@@ -30,9 +30,9 @@ public class shooter extends SubsystemBase{
         //flywheelController.setTolerance(41);
     }
 
-    public void shoot(){
+    public void shoot(int speed){
         //
-        if(robot.shooterMotor.getVelocity() > 1400){
+        if(robot.shooterMotor.getVelocity() > speed){
             robot.shooterMotor.setVelocity(robot.shooterMotor.getVelocity());
             shooterReady = true;
         }else{

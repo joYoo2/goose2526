@@ -60,6 +60,11 @@ public class Robot {
         rightRear.setInverted(true);
         leftFront.setInverted(true);
         leftRear.setInverted(true);
+        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        rightRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        leftRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+
 
 
         intake = new MotorEx(hardwareMap, "intake", Motor.GoBILDA.RPM_1150);

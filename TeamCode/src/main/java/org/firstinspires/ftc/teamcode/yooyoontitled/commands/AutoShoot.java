@@ -12,11 +12,11 @@ public class AutoShoot extends ParallelCommandGroup {
     public AutoShoot() {
         Robot robot = Robot.getInstance();
         addCommands(
-                new InstantCommand(() -> robot.shooter.shoot()),
+                new InstantCommand(() -> robot.shooter.shoot(1450)),
                 new ConditionalCommand(
                         new SequentialCommandGroup(
                                 new InstantCommand(() -> robot.stopperServo.set(0.1)),
-                                new WaitCommand(200),
+//                                new WaitCommand(200),
                                 new InstantCommand(() -> robot.intake.set(1)
 
                                 )

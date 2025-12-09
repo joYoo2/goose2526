@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.Globe;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
 import org.firstinspires.ftc.teamcode.yooyoontitled.commands.AutoShoot;
 import org.firstinspires.ftc.teamcode.yooyoontitled.commands.littleoutshoot;
+import org.firstinspires.ftc.teamcode.yooyoontitled.commands.littleoutshootautofarrr;
 
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 @TeleOp(name = "lets do something cool OP")
@@ -45,6 +46,7 @@ public class investingoodtests extends CommandOpMode{
         elapsedtime.reset();
 
         robot.stopperServo.set(0.45);
+        robot.rampServo.set(0.55);
 
 
         driver = new GamepadEx(gamepad1);
@@ -57,10 +59,13 @@ public class investingoodtests extends CommandOpMode{
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenHeld(
                 new SequentialCommandGroup(
                         new InstantCommand(() -> robot.stopperServo.set(0.1)),
-                    new InstantCommand(() -> robot.intake.set(1)))
+                    new InstantCommand(() -> robot.intake.set(1)),
+                new InstantCommand(() -> robot.shooterMotor.set(-1)))
         );
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenReleased(
-                new InstantCommand(() -> robot.intake.set(0.1))
+                new SequentialCommandGroup(
+                        new InstantCommand(() -> robot.intake.set(0.1)),
+                        new InstantCommand(() -> robot.shooterMotor.set(0)))
         );
 
         driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(
@@ -70,15 +75,71 @@ public class investingoodtests extends CommandOpMode{
                 new InstantCommand(() -> robot.intake.set(0.1))
         );
 
-        driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whileHeld(
+        driver2.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenPressed(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> Globe.shot = false)
+                )
+        );
+        driver2.getGamepadButton(GamepadKeys.Button.TRIANGLE).whileHeld(
 
                 new ParallelCommandGroup(
-                        new AutoShoot()
+                        new InstantCommand(() -> robot.rampServo.set(0.55)),
+                        new littleoutshootautofarrr()
+                )
+        );
+        driver2.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenPressed(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> Globe.shot = false)
+                )
+        );
+        driver2.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenReleased(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.intake.set(0.1))
+                )
+        );
+        driver2.getGamepadButton(GamepadKeys.Button.CIRCLE).whenPressed(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> Globe.shot = false)
+                )
+        );
+        driver2.getGamepadButton(GamepadKeys.Button.CIRCLE).whileHeld(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.rampServo.set(0.55)),
+                        new littleoutshoot()
                 )
         );
 
+        driver2.getGamepadButton(GamepadKeys.Button.CIRCLE).whenReleased(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.intake.set(0.1))
+                )
+        );
+
+
+
+        driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenPressed(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> Globe.shot = false)
+                )
+        );
+        driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whileHeld(
+
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.rampServo.set(0.75)),
+                        new littleoutshootautofarrr()
+                )
+        );
+        driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenPressed(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> Globe.shot = false)
+                )
+        );
         driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenReleased(
                 new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
                         new InstantCommand(() -> robot.shooter.stop()),
                         new InstantCommand(() -> robot.intake.set(0.1))
                 )
@@ -90,6 +151,7 @@ public class investingoodtests extends CommandOpMode{
         );
         driver.getGamepadButton(GamepadKeys.Button.CIRCLE).whileHeld(
                 new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.rampServo.set(0.55)),
                         new littleoutshoot()
                 )
         );
@@ -104,15 +166,15 @@ public class investingoodtests extends CommandOpMode{
 
 
 
-        driver.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
-                new InstantCommand(() -> robot.rampServo.set(0.45))
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
+                new InstantCommand(() -> robot.rampServo.set(0.55))
         );
 
-        driver.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
                 new InstantCommand(() -> robot.rampServo.set(robot.rampServo.get()+0.1))
         );
 
-        driver.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
                 new InstantCommand(() -> robot.rampServo.set(robot.rampServo.get()-0.1))
         );
 
@@ -144,6 +206,7 @@ public class investingoodtests extends CommandOpMode{
                 driver.getLeftY(),
                 driver.getRightX()
         );
+        new InstantCommand(() -> robot.rampServo.set(robot.rampServo.get()));
 
         telemetry.addData("Status", "Running");
         //telemetry.addData("loop times", elapsedtime.milliseconds());
