@@ -17,15 +17,15 @@ public class AutoShoot extends ParallelCommandGroup {
                         new SequentialCommandGroup(
                                 new InstantCommand(() -> robot.stopperServo.set(0.1)),
 //                                new WaitCommand(200),
-                                new InstantCommand(() -> robot.intake.set(1)
+                                new InstantCommand(() -> robot.intake.start()
 
                                 )
                         ),
                         new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.intake.set(0.1)),
+                                new InstantCommand(() -> robot.intake.setSpeed(0.1F)),
                                 new InstantCommand(() -> robot.stopperServo.set(0.45))
                         ),
-                        () -> (robot.shooterMotor.getVelocity() > 1200)
+                        () -> (robot.shooterMotorL.getVelocity() > 1200)
                 ).withTimeout(500)
 
         );

@@ -15,17 +15,22 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 
 import java.util.List;
 public class Robot {
     public MotorEx leftFront, leftRear, rightRear, rightFront; //drivetrain wheels
-    public MotorEx shooterMotor;
+    public MotorEx shooterMotorL;
+    public MotorEx shooterMotorR;
     public Motor.Encoder shooterEncoder;
 
     public shooter shooter;
 
-    public MotorEx intake;
+    public MotorEx intakeR;
+    public MotorEx intakeL;
+
+    public intake intake;
 
     public ServoEx rampServo, stopperServo;
 
@@ -67,15 +72,24 @@ public class Robot {
 
 
 
-        intake = new MotorEx(hardwareMap, "intake", Motor.GoBILDA.RPM_1150);
-        intake.setRunMode(Motor.RunMode.RawPower);
-        intake.setInverted(true);
+        intakeR = new MotorEx(hardwareMap, "intakeR", Motor.GoBILDA.RPM_1150);
+        intakeR.setRunMode(Motor.RunMode.RawPower);
+        intakeR.setInverted(true);
+
+        intakeL = new MotorEx(hardwareMap, "intakeL", Motor.GoBILDA.RPM_1150);
+        intakeL.setRunMode(Motor.RunMode.RawPower);
+        intakeL.setInverted(true);
 
 
-        shooterMotor = new MotorEx(hardwareMap, "shooter", Motor.GoBILDA.BARE);
-        shooterMotor.setRunMode(Motor.RunMode.RawPower);
-        shooterMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        shooterMotor.setInverted(true);
+        shooterMotorL = new MotorEx(hardwareMap, "shooterL", Motor.GoBILDA.BARE);
+        shooterMotorL.setRunMode(Motor.RunMode.RawPower);
+        shooterMotorL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooterMotorL.setInverted(true);
+
+        shooterMotorR = new MotorEx(hardwareMap, "shooterR", Motor.GoBILDA.BARE);
+        shooterMotorR.setRunMode(Motor.RunMode.RawPower);
+        shooterMotorR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooterMotorR.setInverted(true);
 
         shooterEncoder = new Motor(hardwareMap, "shooter").encoder;
 
