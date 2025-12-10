@@ -37,15 +37,15 @@ public class intake extends SubsystemBase {
         robot.intakeL.set(speed);
         robot.intakeR.set(speed);
         //robot.hoodServo.set(0.7);
-        robot.shooterMotorL.set(-0.5);
-        robot.shooterMotorR.set(-0.5);
+        robot.shooterL.set(-0.5);
+        robot.shooterR.set(-0.5);
     }
 
     public void stop(){
         robot.intakeL.set(0);
         robot.intakeR.set(0);
-        robot.shooterMotorL.set(0);
-        robot.shooterMotorR.set(0);
+        robot.shooterL.set(0);
+        robot.shooterR.set(0);
     }
 
     public void stopExceptShooter(){

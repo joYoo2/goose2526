@@ -32,26 +32,26 @@ public class shooter extends SubsystemBase{
 
     public void shoot(int speed){
         //
-        if(robot.shooterMotorL.getVelocity() > speed){
-            robot.shooterMotorL.setVelocity(robot.shooterMotorL.getVelocity());
-            robot.shooterMotorR.setVelocity(robot.shooterMotorR.getVelocity());
+        if(robot.shooterL.getVelocity() > speed){
+            robot.shooterL.setVelocity(robot.shooterL.getVelocity());
+            robot.shooterR.setVelocity(robot.shooterR.getVelocity());
             shooterReady = true;
         }else{
 //            robot.leftShooter.setVelocity(1300);
 //            robot.rightShooter.setVelocity(1300);
-            robot.shooterMotorL.set(1);
-            robot.shooterMotorR.set(1);
+            robot.shooterL.set(1);
+            robot.shooterR.set(1);
             shooterReady = false;
         }
     }
 
     public void stop(){
-        robot.shooterMotorL.setVelocity(0);robot.shooterMotorR.setVelocity(0);
+        robot.shooterL.setVelocity(0);robot.shooterR.setVelocity(0);
     }
 
     public void reverse(){
-        robot.shooterMotorL.set(-1);
-        robot.shooterMotorR.set(-1);
+        robot.shooterL.set(-1);
+        robot.shooterR.set(-1);
     }
 
     //periodic runs in a loop

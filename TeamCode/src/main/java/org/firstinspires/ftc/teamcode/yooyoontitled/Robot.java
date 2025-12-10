@@ -21,8 +21,8 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 import java.util.List;
 public class Robot {
     public MotorEx leftFront, leftRear, rightRear, rightFront; //drivetrain wheels
-    public MotorEx shooterMotorL;
-    public MotorEx shooterMotorR;
+    public MotorEx shooterL;
+    public MotorEx shooterR;
     public Motor.Encoder shooterEncoder;
 
     public shooter shooter;
@@ -81,15 +81,15 @@ public class Robot {
         intakeL.setInverted(true);
 
 
-        shooterMotorL = new MotorEx(hardwareMap, "shooterL", Motor.GoBILDA.BARE);
-        shooterMotorL.setRunMode(Motor.RunMode.RawPower);
-        shooterMotorL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        shooterMotorL.setInverted(true);
+        shooterL = new MotorEx(hardwareMap, "shooterL", Motor.GoBILDA.BARE);
+        shooterL.setRunMode(Motor.RunMode.RawPower);
+        shooterL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooterL.setInverted(true);
 
-        shooterMotorR = new MotorEx(hardwareMap, "shooterR", Motor.GoBILDA.BARE);
-        shooterMotorR.setRunMode(Motor.RunMode.RawPower);
-        shooterMotorR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        shooterMotorR.setInverted(true);
+        shooterR = new MotorEx(hardwareMap, "shooterR", Motor.GoBILDA.BARE);
+        shooterR.setRunMode(Motor.RunMode.RawPower);
+        shooterR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooterR.setInverted(true);
 
         shooterEncoder = new Motor(hardwareMap, "shooter").encoder;
 

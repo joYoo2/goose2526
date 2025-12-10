@@ -117,7 +117,7 @@ public class testing extends CommandOpMode{
         //telemetry.addData("loop times", elapsedtime.milliseconds());
         telemetry.addData("servo", robot.rampServo.get());
         telemetry.addData("stopper", robot.stopperServo.get());
-        telemetry.addData("motor speed", robot.shooterMotorL.getVelocity());
+        telemetry.addData("motor speed", robot.shooterL.getVelocity());
         telemetry.addData("digaierg right", shooterReady);
         elapsedtime.reset();
 
