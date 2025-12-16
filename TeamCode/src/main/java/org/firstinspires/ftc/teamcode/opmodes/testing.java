@@ -24,7 +24,8 @@ import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 @TeleOp(name = "testing")
 public class testing extends CommandOpMode{
-    public GamepadEx driver;
+    public GamepadEx driver, driver2;
+    public int speed;
     private MecanumDrive drive;
     public ElapsedTime elapsedtime;
     public ElapsedTime gameTimer;
@@ -35,21 +36,29 @@ public class testing extends CommandOpMode{
         opModeType = OpModeType.TELEOP;
         // DO NOT REMOVE! Resetting FTCLib Command Sechduler
         super.reset();
+        speed = 1600;
 
         robot.init(hardwareMap);
         elapsedtime = new ElapsedTime();
         elapsedtime.reset();
+        robot.stopperServo.set(0.45);
 
-        register(robot.intake, robot.shooter);
+        register(robot.intake,robot.shooter);
         driver = new GamepadEx(gamepad1);
+        driver2 = new GamepadEx(gamepad2);
         drive = new MecanumDrive(robot.leftFront, robot.rightFront, robot.leftRear, robot.rightRear);
 
         driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(
-                new InstantCommand(() -> robot.intake.start())
+                new SequentialCommandGroup(
+                        new InstantCommand(() -> robot.stopperServo.set(0.1)),
+                        new InstantCommand(() -> robot.intake.start()),
+                        new InstantCommand(() -> robot.shooter.reverse()))
 
         );
         driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenReleased(
-                new InstantCommand(() -> robot.intake.stop())
+                new SequentialCommandGroup(
+                        new InstantCommand(() -> robot.intake.slow()),
+                        new InstantCommand(() -> robot.shooter.stop()))
 
         );
 
@@ -58,24 +67,82 @@ public class testing extends CommandOpMode{
 
         );
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenReleased(
-                new InstantCommand(() -> robot.intake.stop())
+                new InstantCommand(() -> robot.intake.slow())
+
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(
+                new SequentialCommandGroup(
+                        new InstantCommand(() -> robot.stopperServo.set(0.1)),
+                        new InstantCommand(() -> robot.intake.start()),
+                        new InstantCommand(() -> robot.shooter.reverse()))
+
+        );
+        driver2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenReleased(
+                new SequentialCommandGroup(
+                        new InstantCommand(() -> robot.intake.slow()),
+                        new InstantCommand(() -> robot.shooter.stop()))
+
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenHeld(
+                new InstantCommand(() -> robot.intake.reverse())
+
+        );
+        driver2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenReleased(
+                new InstantCommand(() -> robot.intake.slow())
 
         );
 
         driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whileHeld(
-
-                new ParallelCommandGroup(
-//                        new InstantCommand(() -> robot.leftShooter.set(1)),
-//                        new InstantCommand(() -> robot.rightShooter.set(1)),
-                        new AutoShoot()
-                )
-
+                new AutoShoot(1600)
         );
 
         driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenReleased(
                 new ParallelCommandGroup(
                         new InstantCommand(() -> robot.shooter.stop()),
-                        new InstantCommand(() -> robot.intake.stop())
+                        new InstantCommand(() -> robot.intake.slow())
+                )
+
+        );
+
+        // Shooter controls commented out - motors not plugged in
+        driver2.getGamepadButton(GamepadKeys.Button.TRIANGLE).whileHeld(
+                new AutoShoot(1600)
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenReleased(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.intake.slow())
+                )
+
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.CIRCLE).whileHeld(
+                new AutoShoot(speed)
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.CIRCLE).whenReleased(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.intake.slow())
+                )
+
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+                new InstantCommand(()-> speed += 50)
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
+                new InstantCommand(()-> speed -= 50)
+        );
+
+        driver2.getGamepadButton(GamepadKeys.Button.CIRCLE).whenReleased(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> robot.shooter.stop()),
+                        new InstantCommand(() -> robot.intake.slow())
                 )
 
         );
@@ -92,8 +159,24 @@ public class testing extends CommandOpMode{
 
         );
 
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+
+                new InstantCommand(() -> robot.stopperServo.set(0.1))
+
+        );
+
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
+
+                new InstantCommand(() -> robot.stopperServo.set(0.45))
+
+        );
+
+
+
 
         super.run();
+
+
     }
 
     @Override
@@ -114,10 +197,11 @@ public class testing extends CommandOpMode{
         new InstantCommand(() -> robot.rampServo.set(robot.rampServo.get()));
 
         telemetry.addData("Status", "Running");
+        telemetry.addData("speed", speed);
         //telemetry.addData("loop times", elapsedtime.milliseconds());
-        telemetry.addData("servo", robot.rampServo.get());
         telemetry.addData("stopper", robot.stopperServo.get());
-        telemetry.addData("motor speed", robot.shooterL.getVelocity());
+//         Shooter telemetry commented out - motors not plugged in
+        telemetry.addData("motor speed", robot.shooter1.getVelocity());
         telemetry.addData("digaierg right", shooterReady);
         elapsedtime.reset();
 

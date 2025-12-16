@@ -9,23 +9,24 @@ import com.seattlesolvers.solverslib.command.WaitCommand;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
 
 public class AutoShoot extends ParallelCommandGroup {
-    public AutoShoot() {
+    public AutoShoot(int speed) {
         Robot robot = Robot.getInstance();
         addCommands(
-                new InstantCommand(() -> robot.shooter.shoot(1450)),
+                new InstantCommand(() -> robot.shooter.shoot(speed)),
                 new ConditionalCommand(
                         new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.stopperServo.set(0.1)),
+                                new InstantCommand(() -> robot.stopperServo.set(0.45)),
 //                                new WaitCommand(200),
                                 new InstantCommand(() -> robot.intake.start()
 
                                 )
                         ),
                         new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.intake.setSpeed(0.1F)),
-                                new InstantCommand(() -> robot.stopperServo.set(0.45))
+                                new InstantCommand(() -> robot.intake.slow()),
+                                new WaitCommand(1000),
+                                new InstantCommand(() -> robot.stopperServo.set(0.1))
                         ),
-                        () -> (robot.shooterL.getVelocity() > 1200)
+                        () -> (robot.shooter1.getVelocity() > speed-400)
                 ).withTimeout(500)
 
         );

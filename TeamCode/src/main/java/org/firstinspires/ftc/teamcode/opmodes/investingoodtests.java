@@ -171,7 +171,7 @@ public class investingoodtests extends CommandOpMode{
                 new InstantCommand(() -> robot.rampServo.set(robot.rampServo.get()-0.1))
         );
 
-        if(robot.shooterL.getVelocity() > 100){
+        if(robot.shooter1.getVelocity() > 100){
 
             robot.light.setPosition(0.5);//green
         }else{
@@ -205,7 +205,7 @@ public class investingoodtests extends CommandOpMode{
         //telemetry.addData("loop times", elapsedtime.milliseconds());
         telemetry.addData("servo", robot.rampServo.get());
         telemetry.addData("stopper", robot.stopperServo.get());
-        telemetry.addData("motor speed", robot.shooterL.getVelocity());
+        telemetry.addData("motor speed", robot.shooter2.getVelocity());
         telemetry.addData("digaierg right", shooterReady);
         elapsedtime.reset();
 

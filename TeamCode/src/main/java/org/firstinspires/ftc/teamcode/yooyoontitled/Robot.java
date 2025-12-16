@@ -21,8 +21,8 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 import java.util.List;
 public class Robot {
     public MotorEx leftFront, leftRear, rightRear, rightFront; //drivetrain wheels
-    public MotorEx shooterL;
-    public MotorEx shooterR;
+    public MotorEx shooter1;
+    public MotorEx shooter2;
     public Motor.Encoder shooterEncoder;
 
     public shooter shooter;
@@ -74,33 +74,29 @@ public class Robot {
 
         intakeR = new MotorEx(hardwareMap, "intakeR", Motor.GoBILDA.RPM_1150);
         intakeR.setRunMode(Motor.RunMode.RawPower);
-        intakeR.setInverted(true);
 
         intakeL = new MotorEx(hardwareMap, "intakeL", Motor.GoBILDA.RPM_1150);
         intakeL.setRunMode(Motor.RunMode.RawPower);
         intakeL.setInverted(true);
 
+        shooter1 = new MotorEx(hardwareMap, "shooter1", Motor.GoBILDA.BARE);
+        shooter1.setRunMode(Motor.RunMode.RawPower);
+        shooter1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
-        shooterL = new MotorEx(hardwareMap, "shooterL", Motor.GoBILDA.BARE);
-        shooterL.setRunMode(Motor.RunMode.RawPower);
-        shooterL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        shooterL.setInverted(true);
+        shooter2 = new MotorEx(hardwareMap, "shooter2", Motor.GoBILDA.BARE);
+        shooter2.setRunMode(Motor.RunMode.RawPower);
+        shooter2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
-        shooterR = new MotorEx(hardwareMap, "shooterR", Motor.GoBILDA.BARE);
-        shooterR.setRunMode(Motor.RunMode.RawPower);
-        shooterR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        shooterR.setInverted(true);
-
-        shooterEncoder = new Motor(hardwareMap, "shooter").encoder;
+        shooterEncoder = new Motor(hardwareMap, "shooter1").encoder;
 
 
         stopperServo = new ServoEx(hardwareMap, "stopper");
-        rampServo = new ServoEx(hardwareMap, "angle");
 
 
         light = hardwareMap.get(Servo.class, "light");
 
 
+        intake = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake();
         shooter = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter();
 
         //for optimizing loop times
