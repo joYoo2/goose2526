@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.yooyoontitled;
 
+import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
+
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.PoseTracker;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -15,11 +18,15 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 
 import java.util.List;
 public class Robot {
+    //eventually remove
+    private final Pose startPose = new Pose(0.5*robotWidth, 0.5*robotLength, Math.toRadians(90)); //e
+
     public MotorEx leftFront, leftRear, rightRear, rightFront; //drivetrain wheels
     public MotorEx shooter1;
     public MotorEx shooter2;
@@ -35,6 +42,8 @@ public class Robot {
     public ServoEx rampServo, stopperServo;
 
     public Servo light;
+    public static double robotLength = 17.775591;
+    public static double robotWidth = 15.68;
 
     public Follower follower;
     public PoseTracker poseUpdater;
@@ -98,6 +107,18 @@ public class Robot {
 
         intake = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake();
         shooter = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter();
+
+
+
+        follower = Constants.createFollower(hardwareMap);
+
+        if(opModeType.equals(OpModeType.TELEOP)) {
+            follower.setStartingPose(startPose);
+            follower.startTeleopDrive();
+
+        } else{
+            //follower.setStartingPose(new Pose(0, 0, 0));
+        }
 
         //for optimizing loop times
         // Bulk reading enabled!
