@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 import com.pedropathing.ftc.InvertedFTCCoordinates;
 import com.pedropathing.ftc.PoseConverter;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathConstraints;
@@ -74,7 +75,12 @@ public class pedroopmode extends CommandOpMode {
 
         );
 
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+                new InstantCommand(() -> {
+                    robot.follower.turnTo(targetHeading);
 
+                })
+        );
 
 
 
@@ -96,6 +102,8 @@ public class pedroopmode extends CommandOpMode {
                 0 - robot.follower.getPose().getY(),
                 144.0 - robot.follower.getPose().getX()
         );
+
+
 
 
 

@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 import java.util.List;
 public class Robot {
     //eventually remove
-    private final Pose startPose = new Pose(0.5*robotWidth, 0.5*robotLength, Math.toRadians(90)); //e
+    private final Pose autoEndPose = new Pose(0.5*robotWidth, 0.5*robotLength, Math.toRadians(90)); //e
 
     public MotorEx leftFront, leftRear, rightRear, rightFront; //drivetrain wheels
     public MotorEx shooter1;
@@ -113,7 +113,7 @@ public class Robot {
         follower = Constants.createFollower(hardwareMap);
 
         if(opModeType.equals(OpModeType.TELEOP)) {
-            follower.setStartingPose(startPose);
+            follower.setStartingPose(autoEndPose);
             follower.startTeleopDrive();
 
         } else{
