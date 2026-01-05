@@ -75,7 +75,7 @@ public class pedroopmode extends CommandOpMode {
 
         );
 
-        driver.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+        driver.getGamepadButton(GamepadKeys.Button.TOUCHPAD).whenPressed(
                 new InstantCommand(() -> {
                     robot.follower.turnTo(targetHeading);
 

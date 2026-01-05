@@ -34,6 +34,4 @@ public class intake extends SubsystemBase {
         robot.intakeR.set(-1);
     }
 
-
-
 }
