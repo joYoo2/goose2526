@@ -21,8 +21,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights;
 
-@TeleOp(name = "Shooter Testing With Lights")
-public class testingwithlights extends CommandOpMode {
+@TeleOp(name = "Two Player OpMode")
+public class twoplayeropmode extends CommandOpMode {
     public GamepadEx driver, driver2;
     public ElapsedTime gameTimer;
     public static int shooterSpeed = 1000;
@@ -34,6 +34,11 @@ public class testingwithlights extends CommandOpMode {
 
     private static final double STOPPER_OPEN = 0.75;
     private static final double STOPPER_CLOSED = 0.26;
+    private static final double STOPPER_ADJUST_INCREMENT = 0.05;
+
+    // Manual stopper control for driver2
+    private boolean stopperManualMode = false;
+    private double stopperManualPosition = STOPPER_CLOSED;
 
     // Thresholds for shooting (stopper opens earlier to give it time to move)
     private static final double STOPPER_VELOCITY_THRESHOLD = 300; // Open stopper when within 100 RPM of target
@@ -131,6 +136,37 @@ public class testingwithlights extends CommandOpMode {
                 new InstantCommand(() -> robot.intake.stop())
         );
 
+        // Driver2 stopper override controls
+        // DPAD_LEFT: Move stopper towards closed, enable manual mode
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+                new InstantCommand(() -> {
+                    stopperManualMode = true;
+                    stopperManualPosition = Math.max(0.0, stopperManualPosition - STOPPER_ADJUST_INCREMENT);
+                    robot.stopperServo.set(stopperManualPosition);
+                    gamepad2.rumbleBlips(1);
+                })
+        );
+
+        // DPAD_RIGHT: Move stopper towards open, enable manual mode
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
+                new InstantCommand(() -> {
+                    stopperManualMode = true;
+                    stopperManualPosition = Math.min(1.0, stopperManualPosition + STOPPER_ADJUST_INCREMENT);
+                    robot.stopperServo.set(stopperManualPosition);
+                    gamepad2.rumbleBlips(1);
+                })
+        );
+
+        // CROSS/X button: Reset to automatic stopper control
+        driver2.getGamepadButton(GamepadKeys.Button.CROSS).whenPressed(
+                new InstantCommand(() -> {
+                    stopperManualMode = false;
+                    stopperManualPosition = STOPPER_CLOSED;
+                    robot.stopperServo.set(STOPPER_CLOSED);
+                    gamepad2.rumbleBlips(2);
+                })
+        );
+
 
         driver.getGamepadButton(GamepadKeys.Button.TOUCHPAD).whenPressed(
                 new InstantCommand(() -> {
@@ -220,7 +256,11 @@ public class testingwithlights extends CommandOpMode {
                 new ParallelCommandGroup(
                         new InstantCommand(() -> robot.shooter.stop()),
                         new InstantCommand(() -> robot.intake.stop()),
-                        new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED)),
+                        new InstantCommand(() -> {
+                            if (!stopperManualMode) {
+                                robot.stopperServo.set(STOPPER_CLOSED);
+                            }
+                        }),
                         new SequentialCommandGroup(
                                 new InstantCommand(() -> robot.follower.breakFollowing()),
                                 new InstantCommand(() -> robot.follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true)),
@@ -285,13 +325,18 @@ public class testingwithlights extends CommandOpMode {
             telemetry.addData("DEBUG: Intake Ready? (within " + INTAKE_VELOCITY_THRESHOLD + ")", intakeReady);
             telemetry.addData("DEBUG: Angle Error (deg)", angleError);
 
-            // Open stopper as soon as velocity is close (lower threshold)
-            if(stopperReady){
-                robot.stopperServo.set(STOPPER_OPEN);
-                telemetry.addData("DEBUG: Stopper", "OPEN (moving)");
+            // Only control stopper automatically if not in manual mode
+            if (!stopperManualMode) {
+                // Open stopper as soon as velocity is close (lower threshold)
+                if(stopperReady){
+                    robot.stopperServo.set(STOPPER_OPEN);
+                    telemetry.addData("DEBUG: Stopper", "OPEN (moving)");
+                } else {
+                    robot.stopperServo.set(STOPPER_CLOSED);
+                    telemetry.addData("DEBUG: Stopper", "CLOSED (waiting)");
+                }
             } else {
-                robot.stopperServo.set(STOPPER_CLOSED);
-                telemetry.addData("DEBUG: Stopper", "CLOSED (waiting)");
+                telemetry.addData("DEBUG: Stopper", "MANUAL MODE - Pos: " + stopperManualPosition);
             }
 
             // Start feeding when velocity is ready (driver controls alignment manually)
@@ -305,9 +350,10 @@ public class testingwithlights extends CommandOpMode {
 
             telemetry.addData("DEBUG: Stopper Actual Pos", robot.stopperServo.get());
         } else {
-            // Trigger not pressed - just ensure stopper is closed
-            // Let the manual intake buttons (RIGHT/LEFT BUMPER) control the intake
-            robot.stopperServo.set(STOPPER_CLOSED);
+            // Trigger not pressed - only control stopper if not in manual mode
+            if (!stopperManualMode) {
+                robot.stopperServo.set(STOPPER_CLOSED);
+            }
         }
 
         robot.follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
@@ -322,6 +368,14 @@ public class testingwithlights extends CommandOpMode {
         telemetry.addData("Alliance", goals);
         telemetry.addData("Position (x, y)", "%.1f, %.1f", robot.follower.getPose().getX(), robot.follower.getPose().getY());
         telemetry.addData("Heading (deg)", "%.1f", Math.toDegrees(robot.follower.getPose().getHeading()));
+        telemetry.addData("", "");
+
+        telemetry.addData("=== STOPPER CONTROL ===", "");
+        telemetry.addData("Stopper Mode", stopperManualMode ? "MANUAL (Driver2)" : "AUTOMATIC");
+        if (stopperManualMode) {
+            telemetry.addData("Manual Position", "%.2f", stopperManualPosition);
+            telemetry.addData("Press X to reset", "to automatic");
+        }
         telemetry.addData("", "");
 
         telemetry.addData("=== LIGHTS STATUS ===", "");

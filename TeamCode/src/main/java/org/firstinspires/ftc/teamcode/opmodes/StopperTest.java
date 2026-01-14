@@ -11,8 +11,8 @@ public class StopperTest extends LinearOpMode {
     private final Robot robot = Robot.getInstance();
     private double stopperPosition = 0.35;
 
-    private static final double STOPPER_OPEN = 0.24;
-    private static final double STOPPER_CLOSED = 0.725;
+    private static final double STOPPER_OPEN = 0.725;
+    private static final double STOPPER_CLOSED = 0.24;
 
     @Override
     public void runOpMode() {
