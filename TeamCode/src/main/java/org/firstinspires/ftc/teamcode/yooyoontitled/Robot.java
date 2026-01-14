@@ -19,6 +19,7 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 
@@ -37,11 +38,13 @@ public class Robot {
     public MotorEx intakeR;
     public MotorEx intakeL;
 
+    public Servo lightning;
+
     public intake intake;
 
     public ServoEx rampServo, stopperServo;
 
-    public Servo light;
+    public Lights lights;
     public static double robotLength = 17.775591;
     public static double robotWidth = 15.68;
 
@@ -102,8 +105,9 @@ public class Robot {
         stopperServo = new ServoEx(hardwareMap, "stopper");
 
 
-        light = hardwareMap.get(Servo.class, "light");
+        lightning = hardwareMap.get(Servo.class, "light");
 
+        lights = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights();
 
         intake = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake();
         shooter = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter();

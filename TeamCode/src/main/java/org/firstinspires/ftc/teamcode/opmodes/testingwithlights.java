@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
+import static org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights.lightsState;
 
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathConstraints;
@@ -17,9 +18,10 @@ import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.util.InterpLUT;
 
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights;
 
-@TeleOp(name = "Shooter Testing")
-public class testing extends CommandOpMode {
+@TeleOp(name = "Shooter Testing With Lights")
+public class testingwithlights extends CommandOpMode {
     public GamepadEx driver, driver2;
     public ElapsedTime gameTimer;
     public static int shooterSpeed = 1000;
@@ -76,7 +78,12 @@ public class testing extends CommandOpMode {
         elapsedtime = new ElapsedTime();
         elapsedtime.reset();
 
-        register(robot.intake, robot.shooter);
+        // Register subsystems including lights
+        register(robot.intake, robot.shooter, robot.lights);
+
+        // Set initial lights state to show shooter ready status
+        lightsState = Lights.LightsState.SHOOTER_READY;
+
         driver = new GamepadEx(gamepad1);
         driver2 = new GamepadEx(gamepad2);
 
@@ -124,6 +131,19 @@ public class testing extends CommandOpMode {
                     }else{
                         gamepad1.rumble(1000);
                         goals = GoalColor.BLUE_GOAL;
+                    }
+                })
+        );
+
+        // SHARE button: Toggle between SHOOTER_READY and TEAM_COLOR modes
+        driver.getGamepadButton(GamepadKeys.Button.SHARE).whenPressed(
+                new InstantCommand(() -> {
+                    if(lightsState == Lights.LightsState.SHOOTER_READY){
+                        lightsState = Lights.LightsState.TEAM_COLOR;
+                        gamepad1.rumbleBlips(2);
+                    }else{
+                        lightsState = Lights.LightsState.SHOOTER_READY;
+                        gamepad1.rumbleBlips(1);
                     }
                 })
         );
@@ -227,6 +247,11 @@ public class testing extends CommandOpMode {
         targetHeading = calculateTargetHeading();
         shooterSpeed = calculateShooterSpeed();
 
+        // Update shooter ready status for lights
+        int targetSpeed = shooterSpeed + adjustSpeed;
+        double currentVelocity = robot.shooter1.getVelocity();
+        shooterReady = currentVelocity > (targetSpeed - INTAKE_VELOCITY_THRESHOLD);
+
         if(shooterEnabled){
             robot.shooter.shoot(shooterSpeed + adjustSpeed);
         }else{
@@ -237,8 +262,6 @@ public class testing extends CommandOpMode {
             // Two-stage check: stopper gets lower threshold, intake gets stricter threshold
             // Note: Alignment happens via auto-turn, but we don't wait for it to shoot
             // (alignment uses drive motors which can cause voltage drop and slow shooter)
-            int targetSpeed = shooterSpeed + adjustSpeed;
-            double currentVelocity = robot.shooter1.getVelocity();
             double angleError = Math.toDegrees(Math.abs(robot.follower.getPose().getHeading() - targetHeading));
 
             // Stage 1: Open stopper early (gives servo time to move)
@@ -290,6 +313,11 @@ public class testing extends CommandOpMode {
         telemetry.addData("Alliance", goals);
         telemetry.addData("Position (x, y)", "%.1f, %.1f", robot.follower.getPose().getX(), robot.follower.getPose().getY());
         telemetry.addData("Heading (deg)", "%.1f", Math.toDegrees(robot.follower.getPose().getHeading()));
+        telemetry.addData("", "");
+
+        telemetry.addData("=== LIGHTS STATUS ===", "");
+        telemetry.addData("Lights Mode", lightsState == Lights.LightsState.SHOOTER_READY ? "Shooter Ready" : "Team Color");
+        telemetry.addData("Shooter Ready", shooterReady ? "YES (GREEN)" : "NO (RED)");
         telemetry.addData("", "");
 
         telemetry.addData("=== SHOOTING DATA ===", "");
