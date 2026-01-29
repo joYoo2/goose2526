@@ -28,4 +28,8 @@ public class Globe {
     public static double LAUNCHER_MAX_VELOCITY = 2500; // not used
 
     public static boolean shooterReady = false;
+
+    // Goal positions on the field
+    public static final Pose RED_GOAL = new Pose(144, 144, Math.toRadians(225));
+    public static final Pose BLUE_GOAL = new Pose(0, 144, Math.toRadians(315));
 }

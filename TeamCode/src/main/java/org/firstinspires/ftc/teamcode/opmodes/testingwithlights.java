@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 import static org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights.lightsState;
+import static org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter.*;
 
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathConstraints;
@@ -15,7 +16,6 @@ import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.command.button.Trigger;
-import com.seattlesolvers.solverslib.util.InterpLUT;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
@@ -32,42 +32,10 @@ public class testingwithlights extends CommandOpMode {
     private final Robot robot = Robot.getInstance();
     private boolean shooterEnabled = false;
 
-    private static final double STOPPER_OPEN = 0.75;
-    private static final double STOPPER_CLOSED = 0.26;
-
-    // Thresholds for shooting (stopper opens earlier to give it time to move)
-    private static final double STOPPER_VELOCITY_THRESHOLD = 300; // Open stopper when within 100 RPM of target
-    private static final double INTAKE_VELOCITY_THRESHOLD = 0.95;   // Start intake when within 50 RPM of target
-    private static final double ALIGNMENT_THRESHOLD_DEG = 5.0;    // Alignment in degrees
-
-    private static final double ROBOT_WIDTH = 15.68;
-    private static final double ROBOT_LENGTH = 17.775591;
-
-
-    private static final Pose RED_GOAL = new Pose(144, 144, Math.toRadians(225));
-    private static final Pose BLUE_GOAL = new Pose(0, 144, Math.toRadians(315));
-
-    private static final InterpLUT lookUpAutoShoot = new InterpLUT();
-
-    static {
-
-        lookUpAutoShoot.add(3.0, 750);
-        lookUpAutoShoot.add(4.0, 800);
-        lookUpAutoShoot.add(5.0, 850);
-        lookUpAutoShoot.add(6.0, 900);
-        lookUpAutoShoot.add(7.0, 925);
-        lookUpAutoShoot.add(8.0, 960);
-        lookUpAutoShoot.add(9.0, 1000);
-        lookUpAutoShoot.add(10.0, 1100);
-        lookUpAutoShoot.add(11.0, 1150);
-        //far
-        lookUpAutoShoot.add(12.0, 1120);
-        lookUpAutoShoot.add(13.0, 1220);
-        lookUpAutoShoot.add(14.0, 1450);
-        lookUpAutoShoot.add(15.0, 1550);
-        lookUpAutoShoot.add(10000.0, 1500);
-        lookUpAutoShoot.createLUT();
-    }
+    // Constants now imported from:
+    // - shooter.java: STOPPER_OPEN, STOPPER_CLOSED, STOPPER_VELOCITY_THRESHOLD, INTAKE_VELOCITY_THRESHOLD, ALIGNMENT_THRESHOLD_DEG, lookUpAutoShoot
+    // - Robot.java: robotWidth, robotLength
+    // - Globe.java: RED_GOAL, BLUE_GOAL
 
     @Override
     public void initialize(){
@@ -164,16 +132,16 @@ public class testingwithlights extends CommandOpMode {
                     if(goals == GoalColor.BLUE_GOAL){
                         // Red bottom-right corner (x=144, y=0)
                         robot.follower.setPose(new Pose(
-                                144 - ROBOT_WIDTH/2,
-                                0 + ROBOT_LENGTH/2,
+                                144 - Robot.robotWidth/2,
+                                0 + Robot.robotLength/2,
                                 Math.toRadians(90)
                         ));
                         gamepad1.rumbleBlips(3);
                     }else{
                         // Blue bottom-left corner (x=0, y=0)
                         robot.follower.setPose(new Pose(
-                                0 + ROBOT_WIDTH/2,
-                                0 + ROBOT_LENGTH/2,
+                                0 + Robot.robotWidth/2,
+                                0 + Robot.robotLength/2,
                                 Math.toRadians(90)
                         ));
                         gamepad1.rumbleBlips(3);
@@ -415,20 +383,7 @@ public class testingwithlights extends CommandOpMode {
 
     private int calculateShooterSpeed() {
         double distanceFeet = getDistanceToTarget();
-
-        // Define LUT bounds (should match the static block values)
-        final double MIN_DISTANCE = 3.0;
-        final double MAX_DISTANCE = 15.0;
-        final int MIN_SPEED = 800;
-        final int MAX_SPEED = 1500;
-
-        // Only use LUT if distance is within range
-        if (distanceFeet < MIN_DISTANCE) {
-            return MIN_SPEED;
-        } else if (distanceFeet > MAX_DISTANCE) {
-            return MAX_SPEED;
-        } else {
-            return (int) lookUpAutoShoot.get(distanceFeet);
-        }
+        // Use the lookup table method from shooter subsystem
+        return org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter.calculateShooterSpeed(distanceFeet);
     }
 }

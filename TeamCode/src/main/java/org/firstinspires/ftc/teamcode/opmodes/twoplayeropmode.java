@@ -33,7 +33,7 @@ public class twoplayeropmode extends CommandOpMode {
     private boolean shooterEnabled = false;
 
     private static final double STOPPER_OPEN = 0.75;
-    private static final double STOPPER_CLOSED = 0.26;
+    private static final double STOPPER_CLOSED = 0.22;
     private static final double STOPPER_ADJUST_INCREMENT = 0.05;
 
     // Manual stopper control for driver2
@@ -181,17 +181,17 @@ public class twoplayeropmode extends CommandOpMode {
         );
 
         // SHARE button: Toggle between SHOOTER_READY and TEAM_COLOR modes
-        driver.getGamepadButton(GamepadKeys.Button.SHARE).whenPressed(
-                new InstantCommand(() -> {
-                    if(lightsState == Lights.LightsState.SHOOTER_READY){
-                        lightsState = Lights.LightsState.TEAM_COLOR;
-                        gamepad1.rumbleBlips(2);
-                    }else{
-                        lightsState = Lights.LightsState.SHOOTER_READY;
-                        gamepad1.rumbleBlips(1);
-                    }
-                })
-        );
+//        driver.getGamepadButton(GamepadKeys.Button.SHARE).whenPressed(
+//                new InstantCommand(() -> {
+//                    if(lightsState == Lights.LightsState.SHOOTER_READY){
+//                        lightsState = Lights.LightsState.TEAM_COLOR;
+//                        gamepad1.rumbleBlips(2);
+//                    }else{
+//                        lightsState = Lights.LightsState.SHOOTER_READY;
+//                        gamepad1.rumbleBlips(1);
+//                    }
+//                })
+//        );
 
         // DPAD_DOWN: Bottom corner relocalization (robot backed into corner)
         // Position robot in bottom corner and press to set known position
@@ -210,6 +210,65 @@ public class twoplayeropmode extends CommandOpMode {
                         robot.follower.setPose(new Pose(
                                 0 + ROBOT_WIDTH/2,
                                 0 + ROBOT_LENGTH/2,
+                                Math.toRadians(90)
+                        ));
+                        gamepad1.rumbleBlips(3);
+                    }
+                })
+        );
+
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+                new InstantCommand(() -> {
+                    if(goals == GoalColor.BLUE_GOAL){
+                        // Red bottom-right corner (x=144, y=0)
+                        robot.follower.setPose(new Pose(
+                                144/2 + ROBOT_WIDTH/2,
+                                0 + ROBOT_LENGTH/2,
+                                Math.toRadians(90)
+                        ));
+                        gamepad1.rumbleBlips(3);
+                    }else{
+                        // Blue bottom-left corner (x=0, y=0)
+                        robot.follower.setPose(new Pose(
+                                144/2 - ROBOT_WIDTH/2,
+                                0 + ROBOT_LENGTH/2,
+                                Math.toRadians(90)
+                        ));
+                        gamepad1.rumbleBlips(3);
+                    }
+                })
+        );
+
+        // DPAD_UP: Far wall Y relocalization (robot backed into far wall, facing out)
+        // Keeps current X position, sets Y to far wall (144) minus robot length offset
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+                new InstantCommand(() -> {
+                    Pose currentPose = robot.follower.getPose();
+                    robot.follower.setPose(new Pose(
+                            currentPose.getX(),
+                            144 - ROBOT_LENGTH/2,
+                            Math.toRadians(90)  // Facing outward (toward y=0)
+                    ));
+                    gamepad1.rumbleBlips(2);
+                })
+        );
+
+
+        driver.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+                new InstantCommand(() -> {
+                    if(goals == GoalColor.BLUE_GOAL){
+                        // Red bottom-right corner (x=144, y=0)
+                        robot.follower.setPose(new Pose(
+                                144/2 + ROBOT_WIDTH/2,
+                                144 - ROBOT_LENGTH/2,
+                                Math.toRadians(90)
+                        ));
+                        gamepad1.rumbleBlips(3);
+                    }else{
+                        // Blue bottom-left corner (x=0, y=0)
+                        robot.follower.setPose(new Pose(
+                                144/2 - ROBOT_WIDTH/2,
+                                144 - ROBOT_LENGTH/2,
                                 Math.toRadians(90)
                         ));
                         gamepad1.rumbleBlips(3);
@@ -295,6 +354,7 @@ public class twoplayeropmode extends CommandOpMode {
 
         targetHeading = calculateTargetHeading();
         shooterSpeed = calculateShooterSpeed();
+        lightsState = Lights.LightsState.TEAM_COLOR;
 
         // Update shooter ready status for lights
         int targetSpeed = shooterSpeed + adjustSpeed;
