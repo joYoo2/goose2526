@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.auto;
 
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
+import static org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils.*;
 import static org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter.*;
 
 import com.pedropathing.follower.Follower;
@@ -31,6 +32,7 @@ public class bluefarsecond extends CommandOpMode{
         public PathChain pile1bump;
         public PathChain pileback;
         public PathChain pilepickup;
+        public PathChain pileback2;
         public PathChain shoot;
         public PathChain secondpilealign;
         public PathChain secondpileget;
@@ -50,7 +52,7 @@ public class bluefarsecond extends CommandOpMode{
                             new BezierCurve(
                                     new Pose(62.370, 14.188),
                                     new Pose(38.883, 13.340),
-                                    new Pose(10, 13.140)
+                                    new Pose(Robot.robotLength/2-0.5, 13.140)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
                     .build();
@@ -58,23 +60,31 @@ public class bluefarsecond extends CommandOpMode{
             pileback = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(Robot.robotLength/2-0.5, 13.140),
-                                    new Pose(35.888, 9.840)
+                                    new Pose(35.888, Robot.robotWidth/2 +0.5)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
 
             pilepickup = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(35.888, 9.840),
-                                    new Pose(10, 7.840)
+                                    new Pose(35.888, Robot.robotWidth/2 +0.5),
+                                    new Pose(Robot.robotLength/2-0.5, Robot.robotWidth/2 +0.5)
                             )
 
                     ).setTangentHeadingInterpolation()
                     .build();
+            pileback2 = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(Robot.robotLength/2-0.5, Robot.robotWidth/2 +0.5),
+                                    new Pose(Robot.robotLength/2-0.5+10, 10)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
+
 
             shoot = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(10, 7.840),
+                                    new Pose(Robot.robotLength/2-0.5+10, 10),
                                     new Pose(17.370, 30.188),
                                     new Pose(55.370, 14.188)
                             )
@@ -85,22 +95,22 @@ public class bluefarsecond extends CommandOpMode{
                             new BezierCurve(
                                     new Pose(55.370, 14.188),
                                     new Pose(55.536, 35.178),
-                                    new Pose(43.930, 35.794)
+                                    new Pose(45.930, 33)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
                     .build();
 
             secondpileget = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(43.930, 35.794),
-                                    new Pose(10, 36.067)
+                                    new Pose(45.930, 39.794),
+                                    new Pose(Robot.robotLength/2-0.5, 33)
                             )
                     ).setTangentHeadingInterpolation()
                     .build();
 
             shoot2 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(10, 36.067),
+                                    new Pose(Robot.robotLength/2-0.5, 33),
                                     new Pose(55.370, 14.188)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(115))
@@ -119,23 +129,10 @@ public class bluefarsecond extends CommandOpMode{
     private Paths paths;
 
     /**
-     * Calculates the target heading to the goal based on current robot position
-     */
-    private double calculateTargetHeading() {
-        Pose currentPose = robot.follower.getPose();
-        Pose targetGoal = (goals == GoalColor.RED_GOAL) ? RED_GOAL : BLUE_GOAL;
-
-        double dx = targetGoal.getX() - currentPose.getX();
-        double dy = targetGoal.getY() - currentPose.getY();
-
-        return Math.atan2(dy, dx);
-    }
-
-    /**
      * Turns the robot to face the goal
      */
     private void alignToGoal() {
-        double targetHeading = calculateTargetHeading();
+        double targetHeading = calculateTargetHeading(robot.follower.getPose(), goals);
         robot.follower.turnToDegrees(Math.toDegrees(targetHeading));
     }
 

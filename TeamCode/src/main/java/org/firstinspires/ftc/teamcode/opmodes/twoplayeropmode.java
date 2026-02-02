@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
+import static org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils.*;
 import static org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights.lightsState;
 
 import com.pedropathing.geometry.Pose;
@@ -30,10 +31,11 @@ public class twoplayeropmode extends CommandOpMode {
     public static double targetHeading;
     public ElapsedTime elapsedtime;
     private final Robot robot = Robot.getInstance();
-    private boolean shooterEnabled = false;
+    private boolean shooterSpinning = false;  // Controls shooter motor spin (Circle)
+    private boolean shootingEnabled = false;  // Controls intake/stopper logic (Triangle)
 
     private static final double STOPPER_OPEN = 0.75;
-    private static final double STOPPER_CLOSED = 0.22;
+    private static final double STOPPER_CLOSED = 0.3;
     private static final double STOPPER_ADJUST_INCREMENT = 0.05;
 
     // Manual stopper control for driver2
@@ -45,12 +47,14 @@ public class twoplayeropmode extends CommandOpMode {
     private static final double INTAKE_VELOCITY_THRESHOLD = 0.95;   // Start intake when within 50 RPM of target
     private static final double ALIGNMENT_THRESHOLD_DEG = 5.0;    // Alignment in degrees
 
+    // Continuous shooting threshold - once velocity is reached, allow shooting even if velocity drops
+    // Set to 0 to shoot continuously without pausing between shots
+    public static double CONTINUOUS_SHOOT_THRESHOLD = 0;
+    private boolean shooterVelocityLatched = false; // Tracks if shooter has reached target velocity this session
+
     private static final double ROBOT_WIDTH = 15.68;
     private static final double ROBOT_LENGTH = 17.775591;
 
-
-    private static final Pose RED_GOAL = new Pose(144, 144, Math.toRadians(225));
-    private static final Pose BLUE_GOAL = new Pose(0, 144, Math.toRadians(315));
 
     private static final InterpLUT lookUpAutoShoot = new InterpLUT();
 
@@ -200,7 +204,7 @@ public class twoplayeropmode extends CommandOpMode {
                     if(goals == GoalColor.BLUE_GOAL){
                         // Red bottom-right corner (x=144, y=0)
                         robot.follower.setPose(new Pose(
-                                144 - ROBOT_WIDTH/2,
+                                141.5 - ROBOT_WIDTH/2,
                                 0 + ROBOT_LENGTH/2,
                                 Math.toRadians(90)
                         ));
@@ -222,7 +226,7 @@ public class twoplayeropmode extends CommandOpMode {
                     if(goals == GoalColor.BLUE_GOAL){
                         // Red bottom-right corner (x=144, y=0)
                         robot.follower.setPose(new Pose(
-                                144/2 + ROBOT_WIDTH/2,
+                                141.5/2 + ROBOT_WIDTH/2,
                                 0 + ROBOT_LENGTH/2,
                                 Math.toRadians(90)
                         ));
@@ -230,7 +234,7 @@ public class twoplayeropmode extends CommandOpMode {
                     }else{
                         // Blue bottom-left corner (x=0, y=0)
                         robot.follower.setPose(new Pose(
-                                144/2 - ROBOT_WIDTH/2,
+                                141.5/2 - ROBOT_WIDTH/2,
                                 0 + ROBOT_LENGTH/2,
                                 Math.toRadians(90)
                         ));
@@ -241,17 +245,7 @@ public class twoplayeropmode extends CommandOpMode {
 
         // DPAD_UP: Far wall Y relocalization (robot backed into far wall, facing out)
         // Keeps current X position, sets Y to far wall (144) minus robot length offset
-        driver2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
-                new InstantCommand(() -> {
-                    Pose currentPose = robot.follower.getPose();
-                    robot.follower.setPose(new Pose(
-                            currentPose.getX(),
-                            144 - ROBOT_LENGTH/2,
-                            Math.toRadians(90)  // Facing outward (toward y=0)
-                    ));
-                    gamepad1.rumbleBlips(2);
-                })
-        );
+
 
 
         driver.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
@@ -259,16 +253,16 @@ public class twoplayeropmode extends CommandOpMode {
                     if(goals == GoalColor.BLUE_GOAL){
                         // Red bottom-right corner (x=144, y=0)
                         robot.follower.setPose(new Pose(
-                                144/2 + ROBOT_WIDTH/2,
-                                144 - ROBOT_LENGTH/2,
+                                141.5/2 + ROBOT_WIDTH/2,
+                                141.5 - ROBOT_LENGTH/2,
                                 Math.toRadians(90)
                         ));
                         gamepad1.rumbleBlips(3);
                     }else{
                         // Blue bottom-left corner (x=0, y=0)
                         robot.follower.setPose(new Pose(
-                                144/2 - ROBOT_WIDTH/2,
-                                144 - ROBOT_LENGTH/2,
+                                141.5/2 - ROBOT_WIDTH/2,
+                                141.5 - ROBOT_LENGTH/2,
                                 Math.toRadians(90)
                         ));
                         gamepad1.rumbleBlips(3);
@@ -279,18 +273,26 @@ public class twoplayeropmode extends CommandOpMode {
 
 
 
-        driver.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
                 new InstantCommand(() -> adjustSpeed -= 20)
         );
 
+        // Circle: Toggle shooter motor spinning (pre-spin before shooting)
         driver.getGamepadButton(GamepadKeys.Button.CIRCLE).whenPressed(
-                new InstantCommand(() -> robot.stopperServo.set(STOPPER_OPEN))
+                new InstantCommand(() -> {
+                    shooterSpinning = !shooterSpinning;
+                    if (!shooterSpinning) {
+                        robot.shooter.stop();
+                    }
+                    gamepad1.rumbleBlips(shooterSpinning ? 2 : 1);
+                })
         );
+        // Square: Manual stopper close (backup control)
         driver.getGamepadButton(GamepadKeys.Button.SQUARE).whenPressed(
                 new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED))
         );
 
-        driver.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
+        driver2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
                 new InstantCommand(() -> adjustSpeed += 20)
         );
 
@@ -298,7 +300,7 @@ public class twoplayeropmode extends CommandOpMode {
                 new SequentialCommandGroup(
                         new InstantCommand(() -> {
                             // Auto-align to nearest corner
-                            double newHeading = calculateTargetHeading();
+                            double newHeading = calculateTargetHeading(robot.follower.getPose(), goals);
                             targetHeading = newHeading;
                             robot.follower.turnToDegrees(Math.toDegrees(newHeading));
                             robot.follower.setConstraints(new PathConstraints(
@@ -311,9 +313,10 @@ public class twoplayeropmode extends CommandOpMode {
                 )
         );
 
+        // When left trigger released: stop intake, close stopper, resume teleop drive
+        // Note: shooter motor keeps spinning until Circle toggles it off
         new Trigger(() -> driver.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5).whenInactive(
                 new ParallelCommandGroup(
-                        new InstantCommand(() -> robot.shooter.stop()),
                         new InstantCommand(() -> robot.intake.stop()),
                         new InstantCommand(() -> {
                             if (!stopperManualMode) {
@@ -328,13 +331,11 @@ public class twoplayeropmode extends CommandOpMode {
                 )
         );
 
+        // Triangle: Toggle shooting (intake/stopper logic) - only feeds balls when enabled
         driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenPressed(
                 new InstantCommand(() -> {
-                    shooterEnabled = !shooterEnabled;
-                    if (!shooterEnabled) {
-                        robot.shooter.stop();
-                    }
-                    gamepad1.rumbleBlips(shooterEnabled ? 2 : 1);
+                    shootingEnabled = !shootingEnabled;
+                    gamepad1.rumbleBlips(shootingEnabled ? 2 : 1);
                 })
         );
 
@@ -352,7 +353,7 @@ public class twoplayeropmode extends CommandOpMode {
         // DO NOT REMOVE! Runs FTCLib Command Scheduler
         super.run();
 
-        targetHeading = calculateTargetHeading();
+        targetHeading = calculateTargetHeading(robot.follower.getPose(), goals);
         shooterSpeed = calculateShooterSpeed();
         lightsState = Lights.LightsState.TEAM_COLOR;
 
@@ -361,13 +362,15 @@ public class twoplayeropmode extends CommandOpMode {
         double currentVelocity = robot.shooter1.getVelocity();
         shooterReady = currentVelocity > (targetSpeed * INTAKE_VELOCITY_THRESHOLD);
 
-        if(shooterEnabled){
+        // Shooter motor spins when shooterSpinning is true (controlled by Circle)
+        if(shooterSpinning){
             robot.shooter.shoot(shooterSpeed + adjustSpeed);
         }else{
             robot.shooter.stop();
         }
 
-       if(gamepad1.left_trigger > 0.5){
+        // Left trigger controls alignment only; shooting logic requires shootingEnabled (Triangle)
+        if(gamepad1.left_trigger > 0.5 && shootingEnabled){
             // Two-stage check: stopper gets lower threshold, intake gets stricter threshold
             // Note: Alignment happens via auto-turn, but we don't wait for it to shoot
             // (alignment uses drive motors which can cause voltage drop and slow shooter)
@@ -377,12 +380,22 @@ public class twoplayeropmode extends CommandOpMode {
             boolean stopperReady = currentVelocity > (targetSpeed - STOPPER_VELOCITY_THRESHOLD);
 
             // Stage 2: Start intake only when velocity is ready (no alignment requirement)
-            boolean intakeReady = currentVelocity > (targetSpeed * INTAKE_VELOCITY_THRESHOLD);
+            // Check if velocity has reached target - if so, latch it
+            boolean velocityReachedTarget = currentVelocity > (targetSpeed * INTAKE_VELOCITY_THRESHOLD);
+            if (velocityReachedTarget) {
+                shooterVelocityLatched = true;
+            }
+
+            // Once latched, allow continuous shooting as long as velocity is above threshold
+            // With threshold = 0, shoot continuously once velocity is first reached (any velocity > 0)
+            // With threshold > 0, require velocity to stay above that minimum to keep shooting
+            boolean intakeReady = shooterVelocityLatched && currentVelocity > CONTINUOUS_SHOOT_THRESHOLD;
 
             telemetry.addData("DEBUG: Shooter Velocity", currentVelocity);
             telemetry.addData("DEBUG: Target Speed", targetSpeed);
             telemetry.addData("DEBUG: Stopper Ready? (within " + STOPPER_VELOCITY_THRESHOLD + ")", stopperReady);
-            telemetry.addData("DEBUG: Intake Ready? (within " + INTAKE_VELOCITY_THRESHOLD + ")", intakeReady);
+            telemetry.addData("DEBUG: Velocity Latched?", shooterVelocityLatched);
+            telemetry.addData("DEBUG: Intake Ready?", intakeReady);
             telemetry.addData("DEBUG: Angle Error (deg)", angleError);
 
             // Only control stopper automatically if not in manual mode
@@ -410,7 +423,8 @@ public class twoplayeropmode extends CommandOpMode {
 
             telemetry.addData("DEBUG: Stopper Actual Pos", robot.stopperServo.get());
         } else {
-            // Trigger not pressed - only control stopper if not in manual mode
+            // Trigger not pressed - reset latch and close stopper
+            shooterVelocityLatched = false;
             if (!stopperManualMode) {
                 robot.stopperServo.set(STOPPER_CLOSED);
             }
@@ -444,19 +458,23 @@ public class twoplayeropmode extends CommandOpMode {
         telemetry.addData("", "");
 
         telemetry.addData("=== SHOOTING DATA ===", "");
-        telemetry.addData("Target Corner", getTargetCornerName());
-        telemetry.addData("Distance (feet)", "%.2f", getDistanceToTarget());
+        telemetry.addData("Target Goal", getTargetCornerName());
+        telemetry.addData("Target Backboard", getTargetBackboardName(robot.follower.getPose(), goals));
+        telemetry.addData("Distance (feet)", "%.2f", getDistanceToTargetFeet(robot.follower.getPose(), goals));
         telemetry.addData("Target Angle (deg)", "%.1f", Math.toDegrees(targetHeading));
         telemetry.addData("Angle Error (deg)", "%.1f", Math.toDegrees(Math.abs(robot.follower.getPose().getHeading() - targetHeading)));
         telemetry.addData("", "");
 
         telemetry.addData("=== SHOOTER STATUS ===", "");
-        telemetry.addData("Shooter Enabled", shooterEnabled ? "ON" : "OFF");
+        telemetry.addData("Shooter Spinning (Circle)", shooterSpinning ? "ON" : "OFF");
+        telemetry.addData("Shooting Enabled (Triangle)", shootingEnabled ? "ON" : "OFF");
         telemetry.addData("Target Speed", shooterSpeed);
         telemetry.addData("Adjust Speed", adjustSpeed);
         telemetry.addData("Final Speed", shooterSpeed + adjustSpeed);
         telemetry.addData("Actual Velocity", "%.0f", robot.shooter1.getVelocity());
         telemetry.addData("Ready to Shoot", robot.shooter1.getVelocity() > shooterSpeed - 50);
+        telemetry.addData("Velocity Latched", shooterVelocityLatched);
+        telemetry.addData("Continuous Threshold", CONTINUOUS_SHOOT_THRESHOLD);
 
         telemetry.update();
         robot.follower.update();
@@ -478,35 +496,6 @@ public class twoplayeropmode extends CommandOpMode {
         autoEndPose = robot.follower.getPose();
     }
 
-    /**
-     * Calculates the target heading to the nearest scoring corner
-     * based on current alliance color and robot position
-     */
-    private double calculateTargetHeading() {
-        Pose currentPose = robot.follower.getPose();
-        Pose targetCorner = getTargetCorner();
-
-        double dx = targetCorner.getX() - currentPose.getX();
-        double dy = targetCorner.getY() - currentPose.getY();
-
-        return Math.atan2(dy, dx);
-    }
-
-    /**
-     * Determines which goal to shoot at based on alliance color
-     * Goals are located in the TOP corners of the field only
-     * Red goal: top-right (144, 144)
-     * Blue goal: top-left (0, 144)
-     */
-    private Pose getTargetCorner() {
-        if(goals == GoalColor.RED_GOAL) {
-            return RED_GOAL;
-        } else {
-            return BLUE_GOAL;
-        }
-    }
-
-
     private String getTargetCornerName() {
         if(goals == GoalColor.RED_GOAL) {
             return "Red Goal (Top-Right)";
@@ -515,20 +504,8 @@ public class twoplayeropmode extends CommandOpMode {
         }
     }
 
-
-    private double getDistanceToTarget() {
-        Pose currentPose = robot.follower.getPose();
-        Pose targetCorner = getTargetCorner();
-
-        double dx = (targetCorner.getX() - currentPose.getX()) / 12.0; // Convert to feet
-        double dy = (targetCorner.getY() - currentPose.getY()) / 12.0; // Convert to feet
-
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-
     private int calculateShooterSpeed() {
-        double distanceFeet = getDistanceToTarget();
+        double distanceFeet = getDistanceToTargetFeet(robot.follower.getPose(), goals);
 
         // Define LUT bounds (should match the static block values)
         final double MIN_DISTANCE = 3.0;
