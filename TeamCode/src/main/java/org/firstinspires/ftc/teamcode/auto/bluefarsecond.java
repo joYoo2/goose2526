@@ -45,7 +45,7 @@ public class bluefarsecond extends CommandOpMode{
                                     new Pose(64.160, 8.888),
                                     new Pose(62.370, 14.188)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(115))
+                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(105))
                     .build();
 
             pile1bump = follower.pathBuilder().addPath(
@@ -54,20 +54,20 @@ public class bluefarsecond extends CommandOpMode{
                                     new Pose(38.883, 13.340),
                                     new Pose(Robot.robotLength/2-0.5, 13.140)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
+                    ).setLinearHeadingInterpolation(Math.toRadians(105), Math.toRadians(180))
                     .build();
 
             pileback = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(Robot.robotLength/2-0.5, 13.140),
-                                    new Pose(35.888, Robot.robotWidth/2 +0.5)
+                                    new Pose(40.888, Robot.robotWidth/2 +0.5)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
 
             pilepickup = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(35.888, Robot.robotWidth/2 +0.5),
+                                    new Pose(40.888, Robot.robotWidth/2 +0.5),
                                     new Pose(Robot.robotLength/2-0.5, Robot.robotWidth/2 +0.5)
                             )
 
@@ -88,7 +88,7 @@ public class bluefarsecond extends CommandOpMode{
                                     new Pose(17.370, 30.188),
                                     new Pose(55.370, 14.188)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(115))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(105))
                     .build();
 
             secondpilealign = follower.pathBuilder().addPath(
@@ -97,7 +97,7 @@ public class bluefarsecond extends CommandOpMode{
                                     new Pose(55.536, 35.178),
                                     new Pose(45.930, 33)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
+                    ).setLinearHeadingInterpolation(Math.toRadians(105), Math.toRadians(180))
                     .build();
 
             secondpileget = follower.pathBuilder().addPath(
@@ -113,7 +113,7 @@ public class bluefarsecond extends CommandOpMode{
                                     new Pose(Robot.robotLength/2-0.5, 33),
                                     new Pose(55.370, 14.188)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(115))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(105))
                     .build();
 
             parking = follower.pathBuilder().addPath(
@@ -146,7 +146,7 @@ public class bluefarsecond extends CommandOpMode{
                 new WaitCommand(500),
                 new RepeatCommand(
                         new InstantCommand(() -> robot.shooter.shootAuto())
-                ).withTimeout(4000),
+                ).withTimeout(6000),
                 new InstantCommand(() -> robot.intake.stop()),
                 new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED))
         );
@@ -154,7 +154,6 @@ public class bluefarsecond extends CommandOpMode{
 
     public SequentialCommandGroup grabPile1() {
         return new SequentialCommandGroup(
-                new InstantCommand(() -> robot.shooter.stop()),
                 new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED)),
                 new InstantCommand(() -> robot.intake.start()),
                 new InstantCommand(() -> robot.follower.setMaxPower(1)),
@@ -175,9 +174,8 @@ public class bluefarsecond extends CommandOpMode{
                 new WaitCommand(500),
                 new RepeatCommand(
                         new InstantCommand(() -> robot.shooter.shootAuto())
-                ).withTimeout(4000),
+                ).withTimeout(3500),
                 new InstantCommand(() -> robot.intake.stop()),
-                new InstantCommand(() -> robot.shooter.stop()),
                 new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED))
         );
     }
@@ -204,9 +202,8 @@ public class bluefarsecond extends CommandOpMode{
                 new WaitCommand(500),
                 new RepeatCommand(
                         new InstantCommand(() -> robot.shooter.shootAuto())
-                ).withTimeout(4000),
+                ).withTimeout(3500),
                 new InstantCommand(() -> robot.intake.stop()),
-                new InstantCommand(() -> robot.shooter.stop()),
                 new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED))
         );
     }
@@ -264,7 +261,7 @@ public class bluefarsecond extends CommandOpMode{
     @Override
     public void run() {
         super.run();
-
+        robot.shooter.shootsetspeed(920);
         telemetry.addData("timer", timer.milliseconds());
         telemetry.addData("followerIsBusy", robot.follower.isBusy());
         telemetry.addData("servo pos", robot.stopperServo.get());

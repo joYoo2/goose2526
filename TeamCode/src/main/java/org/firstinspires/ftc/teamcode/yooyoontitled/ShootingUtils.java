@@ -11,7 +11,7 @@ import com.pedropathing.geometry.Pose;
 public class ShootingUtils {
     // Backboard constants
     public static final double BACKBOARD_LENGTH = 24.0; // inches
-    public static final double BACKBOARD_CENTER_OFFSET = 5; // 12 inches
+    public static final double BACKBOARD_CENTER_OFFSET = 2; // 12 inches
 
     // Blue goal backboard centers (goal corner at 0, 144)
     // Y-axis wall: runs from (0, 144) to (0, 120) - center at (0, 132)

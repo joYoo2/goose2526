@@ -21,6 +21,7 @@ import com.seattlesolvers.solverslib.util.InterpLUT;
 import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights;
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 
 @TeleOp(name = "Two Player OpMode")
 public class twoplayeropmode extends CommandOpMode {
@@ -223,7 +224,7 @@ public class twoplayeropmode extends CommandOpMode {
 
         driver.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
                 new InstantCommand(() -> {
-                    if(goals == GoalColor.BLUE_GOAL){
+                    if(goals == GoalColor.RED_GOAL){
                         // Red bottom-right corner (x=144, y=0)
                         robot.follower.setPose(new Pose(
                                 141.5/2 + ROBOT_WIDTH/2,
@@ -250,7 +251,7 @@ public class twoplayeropmode extends CommandOpMode {
 
         driver.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
                 new InstantCommand(() -> {
-                    if(goals == GoalColor.BLUE_GOAL){
+                    if(goals == GoalColor.RED_GOAL){
                         // Red bottom-right corner (x=144, y=0)
                         robot.follower.setPose(new Pose(
                                 141.5/2 + ROBOT_WIDTH/2,
@@ -510,7 +511,7 @@ public class twoplayeropmode extends CommandOpMode {
         // Define LUT bounds (should match the static block values)
         final double MIN_DISTANCE = 3.0;
         final double MAX_DISTANCE = 15.0;
-        final int MIN_SPEED = 800;
+        final int MIN_SPEED = 200;
         final int MAX_SPEED = 1500;
 
         // Only use LUT if distance is within range
@@ -519,7 +520,7 @@ public class twoplayeropmode extends CommandOpMode {
         } else if (distanceFeet > MAX_DISTANCE) {
             return MAX_SPEED;
         } else {
-            return (int) lookUpAutoShoot.get(distanceFeet);
+            return (int) shooter.calculateShooterSpeed(distanceFeet);
         }
     }
 }

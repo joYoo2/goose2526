@@ -94,11 +94,13 @@ public class Robot {
 
         shooter1 = new MotorEx(hardwareMap, "shooter1", Motor.GoBILDA.BARE);
         shooter1.setRunMode(Motor.RunMode.RawPower);
-        shooter1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooter1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+
 
         shooter2 = new MotorEx(hardwareMap, "shooter2", Motor.GoBILDA.BARE);
         shooter2.setRunMode(Motor.RunMode.RawPower);
-        shooter2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooter2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        shooter2.setInverted(true);
 
         shooterEncoder = new Motor(hardwareMap, "shooter1").encoder;
 

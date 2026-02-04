@@ -26,25 +26,25 @@ public class shooter extends SubsystemBase{
     // LUT bounds
     public static final double MIN_DISTANCE = 3.0;
     public static final double MAX_DISTANCE = 15.0;
-    public static final int MIN_SPEED = 800;
+    public static final int MIN_SPEED = 200;
     public static final int MAX_SPEED = 1500;
 
     static {
-        lookUpAutoShoot.add(3.0, 750);
-        lookUpAutoShoot.add(4.0, 800);
-        lookUpAutoShoot.add(5.0, 850);
-        lookUpAutoShoot.add(6.0, 900);
-        lookUpAutoShoot.add(7.0, 925);
-        lookUpAutoShoot.add(8.0, 960);
-        lookUpAutoShoot.add(9.0, 1000);
-        lookUpAutoShoot.add(10.0, 1100);
-        lookUpAutoShoot.add(11.0, 1150);
+        lookUpAutoShoot.add(3.0, 600);
+        lookUpAutoShoot.add(4.0, 650);
+        lookUpAutoShoot.add(5.0, 700);
+        lookUpAutoShoot.add(6.0, 750);
+        lookUpAutoShoot.add(7.0, 775);
+        lookUpAutoShoot.add(8.0, 800);
+        lookUpAutoShoot.add(9.0, 850);
+        lookUpAutoShoot.add(10.0, 950);
+        lookUpAutoShoot.add(11.0, 1000);
         //far
-        lookUpAutoShoot.add(12.0, 1120);
-        lookUpAutoShoot.add(13.0, 1220);
-        lookUpAutoShoot.add(14.0, 1450);
-        lookUpAutoShoot.add(15.0, 1550);
-        lookUpAutoShoot.add(10000.0, 1500);
+        lookUpAutoShoot.add(12.0, 920);
+        lookUpAutoShoot.add(13.0, 1020);
+        lookUpAutoShoot.add(14.0, 1250);
+        lookUpAutoShoot.add(15.0, 1350);
+        lookUpAutoShoot.add(10000.0, 1300);
         lookUpAutoShoot.createLUT();
     }
 
@@ -77,12 +77,22 @@ public class shooter extends SubsystemBase{
         }
     }
 
+    public void shootsetspeed(int speed){
+        if(robot.shooter1.getVelocity() > speed){
+            robot.shooter1.setVelocity(robot.shooter1.getVelocity());
+            robot.shooter2.setVelocity(robot.shooter2.getVelocity());
+        }else{
+            robot.shooter1.set(1);
+            robot.shooter2.set(1);
+        }
+    }
+
     /**
      * Auto-shoot method that intelligently controls stopper and intake based on shooter velocity
      * Uses the same logic as testing.java for reliable shooting
      */
     public void shootAuto(){
-        int targetSpeed = 1120;
+        int targetSpeed = 920;
         double currentVelocity = robot.shooter1.getVelocity();
 
         // Spin up shooters
