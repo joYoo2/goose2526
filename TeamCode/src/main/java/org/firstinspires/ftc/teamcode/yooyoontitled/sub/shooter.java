@@ -66,7 +66,7 @@ public class shooter extends SubsystemBase{
     }
 
     public void shoot(int speed){
-        if(robot.shooter1.getVelocity() > speed){
+        if(robot.shooter2.getVelocity() > speed){
             robot.shooter1.setVelocity(robot.shooter1.getVelocity());
             robot.shooter2.setVelocity(robot.shooter2.getVelocity());
             shooterReady = true;
@@ -78,7 +78,7 @@ public class shooter extends SubsystemBase{
     }
 
     public void shootsetspeed(int speed){
-        if(robot.shooter1.getVelocity() > speed){
+        if(robot.shooter2.getVelocity() > speed){
             robot.shooter1.setVelocity(robot.shooter1.getVelocity());
             robot.shooter2.setVelocity(robot.shooter2.getVelocity());
         }else{
@@ -92,7 +92,7 @@ public class shooter extends SubsystemBase{
      * Uses the same logic as testing.java for reliable shooting
      */
     public void shootAuto(){
-        int targetSpeed = 920;
+        int targetSpeed = 900;
         double currentVelocity = robot.shooter1.getVelocity();
 
         // Spin up shooters

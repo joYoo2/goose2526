@@ -27,7 +27,7 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
 public class twoplayeropmode extends CommandOpMode {
     public GamepadEx driver, driver2;
     public ElapsedTime gameTimer;
-    public static int shooterSpeed = 1000;
+    public static int shooterSpeed = 1500;
     public static int adjustSpeed = 0;
     public static double targetHeading;
     public ElapsedTime elapsedtime;
@@ -50,7 +50,7 @@ public class twoplayeropmode extends CommandOpMode {
 
     // Continuous shooting threshold - once velocity is reached, allow shooting even if velocity drops
     // Set to 0 to shoot continuously without pausing between shots
-    public static double CONTINUOUS_SHOOT_THRESHOLD = 0;
+    public static double CONTINUOUS_SHOOT_THRESHOLD = 100;
     private boolean shooterVelocityLatched = false; // Tracks if shooter has reached target velocity this session
 
     private static final double ROBOT_WIDTH = 15.68;
@@ -390,39 +390,39 @@ public class twoplayeropmode extends CommandOpMode {
             // Once latched, allow continuous shooting as long as velocity is above threshold
             // With threshold = 0, shoot continuously once velocity is first reached (any velocity > 0)
             // With threshold > 0, require velocity to stay above that minimum to keep shooting
-            boolean intakeReady = shooterVelocityLatched && currentVelocity > CONTINUOUS_SHOOT_THRESHOLD;
+            boolean intakeReady = shooterVelocityLatched && currentVelocity > targetSpeed - CONTINUOUS_SHOOT_THRESHOLD;
 
-            telemetry.addData("DEBUG: Shooter Velocity", currentVelocity);
-            telemetry.addData("DEBUG: Target Speed", targetSpeed);
-            telemetry.addData("DEBUG: Stopper Ready? (within " + STOPPER_VELOCITY_THRESHOLD + ")", stopperReady);
-            telemetry.addData("DEBUG: Velocity Latched?", shooterVelocityLatched);
-            telemetry.addData("DEBUG: Intake Ready?", intakeReady);
-            telemetry.addData("DEBUG: Angle Error (deg)", angleError);
+//            telemetry.addData("DEBUG: Shooter Velocity", currentVelocity);
+//            telemetry.addData("DEBUG: Target Speed", targetSpeed);
+//            telemetry.addData("DEBUG: Stopper Ready? (within " + STOPPER_VELOCITY_THRESHOLD + ")", stopperReady);
+//            telemetry.addData("DEBUG: Velocity Latched?", shooterVelocityLatched);
+//            telemetry.addData("DEBUG: Intake Ready?", intakeReady);
+//            telemetry.addData("DEBUG: Angle Error (deg)", angleError);
 
             // Only control stopper automatically if not in manual mode
             if (!stopperManualMode) {
                 // Open stopper as soon as velocity is close (lower threshold)
                 if(stopperReady){
                     robot.stopperServo.set(STOPPER_OPEN);
-                    telemetry.addData("DEBUG: Stopper", "OPEN (moving)");
+                   // telemetry.addData("DEBUG: Stopper", "OPEN (moving)");
                 } else {
                     robot.stopperServo.set(STOPPER_CLOSED);
-                    telemetry.addData("DEBUG: Stopper", "CLOSED (waiting)");
+                 //   telemetry.addData("DEBUG: Stopper", "CLOSED (waiting)");
                 }
             } else {
-                telemetry.addData("DEBUG: Stopper", "MANUAL MODE - Pos: " + stopperManualPosition);
+              //  telemetry.addData("DEBUG: Stopper", "MANUAL MODE - Pos: " + stopperManualPosition);
             }
 
             // Start feeding when velocity is ready (driver controls alignment manually)
             if(intakeReady){
                 robot.intake.start();
-                telemetry.addData("DEBUG: Intake", "FEEDING!");
+              //  telemetry.addData("DEBUG: Intake", "FEEDING!");
             } else {
                 robot.intake.stop();
-                telemetry.addData("DEBUG: Intake", "STOPPED (waiting for velocity)");
+              //  telemetry.addData("DEBUG: Intake", "STOPPED (waiting for velocity)");
             }
 
-            telemetry.addData("DEBUG: Stopper Actual Pos", robot.stopperServo.get());
+           // telemetry.addData("DEBUG: Stopper Actual Pos", robot.stopperServo.get());
         } else {
             // Trigger not pressed - reset latch and close stopper
             shooterVelocityLatched = false;
@@ -439,43 +439,43 @@ public class twoplayeropmode extends CommandOpMode {
             robot.follower.startTeleopDrive();
         }
 
-        telemetry.addData("=== ROBOT STATUS ===", "");
-        telemetry.addData("Alliance", goals);
-        telemetry.addData("Position (x, y)", "%.1f, %.1f", robot.follower.getPose().getX(), robot.follower.getPose().getY());
-        telemetry.addData("Heading (deg)", "%.1f", Math.toDegrees(robot.follower.getPose().getHeading()));
-        telemetry.addData("", "");
-
-        telemetry.addData("=== STOPPER CONTROL ===", "");
-        telemetry.addData("Stopper Mode", stopperManualMode ? "MANUAL (Driver2)" : "AUTOMATIC");
-        if (stopperManualMode) {
-            telemetry.addData("Manual Position", "%.2f", stopperManualPosition);
-            telemetry.addData("Press X to reset", "to automatic");
-        }
-        telemetry.addData("", "");
-
-        telemetry.addData("=== LIGHTS STATUS ===", "");
-        telemetry.addData("Lights Mode", lightsState == Lights.LightsState.SHOOTER_READY ? "Shooter Ready" : "Team Color");
-        telemetry.addData("Shooter Ready", shooterReady ? "YES (GREEN)" : "NO (RED)");
-        telemetry.addData("", "");
-
-        telemetry.addData("=== SHOOTING DATA ===", "");
-        telemetry.addData("Target Goal", getTargetCornerName());
-        telemetry.addData("Target Backboard", getTargetBackboardName(robot.follower.getPose(), goals));
-        telemetry.addData("Distance (feet)", "%.2f", getDistanceToTargetFeet(robot.follower.getPose(), goals));
-        telemetry.addData("Target Angle (deg)", "%.1f", Math.toDegrees(targetHeading));
-        telemetry.addData("Angle Error (deg)", "%.1f", Math.toDegrees(Math.abs(robot.follower.getPose().getHeading() - targetHeading)));
-        telemetry.addData("", "");
-
-        telemetry.addData("=== SHOOTER STATUS ===", "");
-        telemetry.addData("Shooter Spinning (Circle)", shooterSpinning ? "ON" : "OFF");
-        telemetry.addData("Shooting Enabled (Triangle)", shootingEnabled ? "ON" : "OFF");
-        telemetry.addData("Target Speed", shooterSpeed);
-        telemetry.addData("Adjust Speed", adjustSpeed);
-        telemetry.addData("Final Speed", shooterSpeed + adjustSpeed);
-        telemetry.addData("Actual Velocity", "%.0f", robot.shooter1.getVelocity());
-        telemetry.addData("Ready to Shoot", robot.shooter1.getVelocity() > shooterSpeed - 50);
-        telemetry.addData("Velocity Latched", shooterVelocityLatched);
-        telemetry.addData("Continuous Threshold", CONTINUOUS_SHOOT_THRESHOLD);
+//        telemetry.addData("=== ROBOT STATUS ===", "");
+//        telemetry.addData("Alliance", goals);
+//        telemetry.addData("Position (x, y)", "%.1f, %.1f", robot.follower.getPose().getX(), robot.follower.getPose().getY());
+//        telemetry.addData("Heading (deg)", "%.1f", Math.toDegrees(robot.follower.getPose().getHeading()));
+//        telemetry.addData("", "");
+//
+//        telemetry.addData("=== STOPPER CONTROL ===", "");
+//        telemetry.addData("Stopper Mode", stopperManualMode ? "MANUAL (Driver2)" : "AUTOMATIC");
+//        if (stopperManualMode) {
+//            telemetry.addData("Manual Position", "%.2f", stopperManualPosition);
+//            telemetry.addData("Press X to reset", "to automatic");
+//        }
+//        telemetry.addData("", "");
+//
+//        telemetry.addData("=== LIGHTS STATUS ===", "");
+//        telemetry.addData("Lights Mode", lightsState == Lights.LightsState.SHOOTER_READY ? "Shooter Ready" : "Team Color");
+//        telemetry.addData("Shooter Ready", shooterReady ? "YES (GREEN)" : "NO (RED)");
+//        telemetry.addData("", "");
+//
+//        telemetry.addData("=== SHOOTING DATA ===", "");
+//        telemetry.addData("Target Goal", getTargetCornerName());
+//        telemetry.addData("Target Backboard", getTargetBackboardName(robot.follower.getPose(), goals));
+//        telemetry.addData("Distance (feet)", "%.2f", getDistanceToTargetFeet(robot.follower.getPose(), goals));
+//        telemetry.addData("Target Angle (deg)", "%.1f", Math.toDegrees(targetHeading));
+//        telemetry.addData("Angle Error (deg)", "%.1f", Math.toDegrees(Math.abs(robot.follower.getPose().getHeading() - targetHeading)));
+//        telemetry.addData("", "");
+//
+//        telemetry.addData("=== SHOOTER STATUS ===", "");
+//        telemetry.addData("Shooter Spinning (Circle)", shooterSpinning ? "ON" : "OFF");
+//        telemetry.addData("Shooting Enabled (Triangle)", shootingEnabled ? "ON" : "OFF");
+//        telemetry.addData("Target Speed", shooterSpeed);
+//        telemetry.addData("Adjust Speed", adjustSpeed);
+//        telemetry.addData("Final Speed", shooterSpeed + adjustSpeed);
+//        telemetry.addData("Actual Velocity", "%.0f", robot.shooter1.getVelocity());
+//        telemetry.addData("Ready to Shoot", robot.shooter1.getVelocity() > shooterSpeed - 50);
+//        telemetry.addData("Velocity Latched", shooterVelocityLatched);
+//        telemetry.addData("Continuous Threshold", CONTINUOUS_SHOOT_THRESHOLD);
 
         telemetry.update();
         robot.follower.update();
@@ -511,7 +511,7 @@ public class twoplayeropmode extends CommandOpMode {
         // Define LUT bounds (should match the static block values)
         final double MIN_DISTANCE = 3.0;
         final double MAX_DISTANCE = 15.0;
-        final int MIN_SPEED = 200;
+        final int MIN_SPEED = 600;
         final int MAX_SPEED = 1500;
 
         // Only use LUT if distance is within range
