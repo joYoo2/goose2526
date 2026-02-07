@@ -60,7 +60,7 @@ public class bluefarsecond extends CommandOpMode{
             pileback = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(Robot.robotLength/2-0.1, 10.140),
-                                    new Pose(45.888, Robot.robotWidth/2 + 0.5)
+                                    new Pose(30.888, Robot.robotWidth/2 + 0.5)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -158,8 +158,8 @@ public class bluefarsecond extends CommandOpMode{
                 new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED)),
                 new InstantCommand(() -> robot.intake.start()),
                 new InstantCommand(() -> robot.follower.setMaxPower(1)),
-                new FollowPathCommand(robot.follower, paths.pile1bump, false),
-                new FollowPathCommand(robot.follower, paths.pileback, false),
+                new FollowPathCommand(robot.follower, paths.pile1bump, false).withTimeout(2000),
+                new FollowPathCommand(robot.follower, paths.pileback, false).withTimeout(2000),
                 new InstantCommand(() -> robot.intake.start()),
                 new FollowPathCommand(robot.follower, paths.pilepickup, false).withTimeout(2000),
                 new WaitCommand(500),

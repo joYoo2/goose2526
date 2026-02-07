@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.auto;
 
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
+import static org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils.*;
+import static org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter.*;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
@@ -30,6 +32,8 @@ public class redfarsecond extends CommandOpMode{
         public PathChain pile1bump;
         public PathChain pileback;
         public PathChain pilepickup;
+
+        public PathChain pileback2;
         public PathChain shoot;
         public PathChain secondpilealign;
         public PathChain secondpileget;
@@ -42,71 +46,81 @@ public class redfarsecond extends CommandOpMode{
                                     new Pose(64.160, 8.888).mirror(),
                                     new Pose(62.370, 14.188).mirror()
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-90), Math.toRadians(180-115))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180-90), Math.toRadians(180-105))
                     .build();
 
             pile1bump = follower.pathBuilder().addPath(
                             new BezierCurve(
                                     new Pose(62.370, 14.188).mirror(),
-                                    new Pose(38.883, 13.340).mirror(),
-                                    new Pose(8.688, 13.140).mirror()
+                                    new Pose(38.883, 11.340).mirror(),
+                                    new Pose(Robot.robotLength/2-0.1, 10.140).mirror()
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-115), Math.toRadians(180-180))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180-105), Math.toRadians(180-180))
                     .build();
 
             pileback = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(8.888, 13.140).mirror(),
-                                    new Pose(25.888, 10.840).mirror()
+                                    new Pose(Robot.robotLength/2-0.1, 10.140).mirror(),
+                                    new Pose(45.888, Robot.robotWidth/2 + 1).mirror()
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-180))
                     .build();
 
             pilepickup = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(19.888, 10.840).mirror(),
-                                    new Pose(8.888, 8.340).mirror()
+                            new BezierCurve(
+                                    new Pose(45.888, Robot.robotWidth/2 + 1).mirror(),
+                                    new Pose(43.888, Robot.robotWidth/2+0.6).mirror(),
+                                    new Pose(Robot.robotLength/2-0.1, Robot.robotWidth/2 +0.4).mirror()
                             )
-                    ).setTangentHeadingInterpolation()
+
+                    ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-180))
                     .build();
+            pileback2 = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(Robot.robotLength/2-0.1, Robot.robotWidth/2 +0.4).mirror(),
+                                    new Pose(Robot.robotLength/2-0.5+10, 10).mirror()
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-180))
+                    .build();
+
 
             shoot = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(8.888, 8.340).mirror(),
-                                    new Pose(22.370, 30.188).mirror(),
-                                    new Pose(62.370, 14.188).mirror()
+                                    new Pose(Robot.robotLength/2-0.5+10, 10).mirror(),
+                                    new Pose(17.370, 30.188).mirror(),
+                                    new Pose(55.370, 14.188).mirror()
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-115))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-105))
                     .build();
 
             secondpilealign = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(62.370, 14.188).mirror(),
+                                    new Pose(55.370, 14.188).mirror(),
                                     new Pose(55.536, 35.178).mirror(),
-                                    new Pose(43.930, 35.794).mirror()
+                                    new Pose(45.930, 33).mirror()
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-115), Math.toRadians(180-180))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180-105), Math.toRadians(180-180))
                     .build();
 
             secondpileget = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(43.930, 35.794).mirror(),
-                                    new Pose(0.016, 36.067).mirror()
+                                    new Pose(45.930, 39.794).mirror(),
+                                    new Pose(Robot.robotLength/2-0.5, 33).mirror()
                             )
                     ).setTangentHeadingInterpolation()
                     .build();
 
             shoot2 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(0.016, 36.067).mirror(),
-                                    new Pose(62.370, 14.188).mirror()
+                                    new Pose(Robot.robotLength/2-0.5, 33).mirror(),
+                                    new Pose(55.370, 14.188).mirror()
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-115))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-105))
                     .build();
 
             parking = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(62.370, 14.188).mirror(),
+                                    new Pose(55.370, 14.188).mirror(),
                                     new Pose(51.732, 27.155).mirror()
                             )
                     ).setTangentHeadingInterpolation()
@@ -116,31 +130,40 @@ public class redfarsecond extends CommandOpMode{
 
     private Paths paths;
 
+    /**
+     * Turns the robot to face the goal
+     */
+    private void alignToGoal() {
+        double targetHeading = calculateTargetHeading(robot.follower.getPose(), goals);
+        robot.follower.turnToDegrees(Math.toDegrees(targetHeading));
+    }
+
     public SequentialCommandGroup scorePreload() {
         return new SequentialCommandGroup(
                 new WaitCommand(100),
                 new InstantCommand(() -> robot.follower.setMaxPower(1)),
                 new FollowPathCommand(robot.follower, paths.shootingpose, true),
+                // Align to goal before shooting
+                new InstantCommand(this::alignToGoal),
                 new WaitCommand(500),
                 new RepeatCommand(
                         new InstantCommand(() -> robot.shooter.shootAuto())
-                ).withTimeout(5000),
+                ).withTimeout(6000),
                 new InstantCommand(() -> robot.intake.stop()),
-                new InstantCommand(() -> robot.stopperServo.set(0))
+                new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED))
         );
     }
 
     public SequentialCommandGroup grabPile1() {
         return new SequentialCommandGroup(
-                new InstantCommand(() -> robot.shooter.stop()),
-                new InstantCommand(() -> robot.stopperServo.set(0)),
+                new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED)),
                 new InstantCommand(() -> robot.intake.start()),
                 new InstantCommand(() -> robot.follower.setMaxPower(1)),
-                new FollowPathCommand(robot.follower, paths.pile1bump, false).withTimeout(1500),
+                new FollowPathCommand(robot.follower, paths.pile1bump, false),
                 new FollowPathCommand(robot.follower, paths.pileback, false),
-                new FollowPathCommand(robot.follower, paths.pilepickup, false).withTimeout(1500),
+                new InstantCommand(() -> robot.intake.start()),
+                new FollowPathCommand(robot.follower, paths.pilepickup, false).withTimeout(2000),
                 new WaitCommand(500),
-                new InstantCommand(() -> robot.intake.stop()),
                 new InstantCommand(() -> robot.follower.setMaxPower(1))
         );
     }
@@ -148,25 +171,26 @@ public class redfarsecond extends CommandOpMode{
     public SequentialCommandGroup scorePile1() {
         return new SequentialCommandGroup(
                 new FollowPathCommand(robot.follower, paths.shoot, true),
+                // Align to goal before shooting
+                new InstantCommand(this::alignToGoal),
+                new InstantCommand(() -> robot.intake.stop()),
                 new WaitCommand(500),
                 new RepeatCommand(
                         new InstantCommand(() -> robot.shooter.shootAuto())
-                ).withTimeout(4000),
+                ).withTimeout(3500),
                 new InstantCommand(() -> robot.intake.stop()),
-                new InstantCommand(() -> robot.shooter.stop()),
-                new InstantCommand(() -> robot.stopperServo.set(0))
+                new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED))
         );
     }
 
     public SequentialCommandGroup grabpile2() {
         return new SequentialCommandGroup(
                 new FollowPathCommand(robot.follower, paths.secondpilealign, true),
-                new InstantCommand(() -> robot.stopperServo.set(0)),
+                new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED)),
                 new InstantCommand(() -> robot.intake.start()),
                 new InstantCommand(() -> robot.follower.setMaxPower(1)),
                 new FollowPathCommand(robot.follower, paths.secondpileget, false).withTimeout(2000),
                 new WaitCommand(500),
-                new InstantCommand(() -> robot.intake.stop()),
                 new InstantCommand(() -> robot.follower.setMaxPower(1))
 
         );
@@ -175,13 +199,15 @@ public class redfarsecond extends CommandOpMode{
     public SequentialCommandGroup scorePile2() {
         return new SequentialCommandGroup(
                 new FollowPathCommand(robot.follower, paths.shoot2, true),
+                // Align to goal before shooting
+                new InstantCommand(this::alignToGoal),
+                new InstantCommand(() -> robot.intake.stop()),
                 new WaitCommand(500),
                 new RepeatCommand(
                         new InstantCommand(() -> robot.shooter.shootAuto())
-                ).withTimeout(4000),
+                ).withTimeout(3500),
                 new InstantCommand(() -> robot.intake.stop()),
-                new InstantCommand(() -> robot.shooter.stop()),
-                new InstantCommand(() -> robot.stopperServo.set(0))
+                new InstantCommand(() -> robot.stopperServo.set(STOPPER_CLOSED))
         );
     }
 
@@ -202,14 +228,14 @@ public class redfarsecond extends CommandOpMode{
         super.reset();
 
         robot.init(hardwareMap);
-        robot.stopperServo.set(0.52);
+        robot.stopperServo.set(STOPPER_CLOSED);
 
         // Initialize subsystems
         register(robot.intake, robot.shooter);
 
         // Generate paths
         paths = new Paths(robot.follower);
-        robot.follower.setStartingPose(new Pose(64.160, 8.888, Math.toRadians(90)).mirror());
+        robot.follower.setStartingPose(new Pose(64.160, 8.888, Math.toRadians(180-90)).mirror());
         robot.follower.setMaxPower(1);
 
         schedule(
@@ -225,6 +251,7 @@ public class redfarsecond extends CommandOpMode{
                         scorePile1(),
                         park()
 
+
                 )
         );
     }
@@ -237,7 +264,7 @@ public class redfarsecond extends CommandOpMode{
     @Override
     public void run() {
         super.run();
-
+        robot.shooter.shootsetspeed(900);
         telemetry.addData("timer", timer.milliseconds());
         telemetry.addData("followerIsBusy", robot.follower.isBusy());
         telemetry.addData("servo pos", robot.stopperServo.get());
@@ -256,6 +283,6 @@ public class redfarsecond extends CommandOpMode{
 
     @Override
     public void end() {
-        autoEndPose = robot.follower.getPose();
+        autoEndPose = robot.follower.getPose().mirror();
     }
 }

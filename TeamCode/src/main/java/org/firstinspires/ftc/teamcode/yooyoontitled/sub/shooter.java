@@ -27,7 +27,7 @@ public class shooter extends SubsystemBase{
     public static final double MIN_DISTANCE = 3.0;
     public static final double MAX_DISTANCE = 15.0;
     public static final int MIN_SPEED = 200;
-    public static final int MAX_SPEED = 1500;
+    public static final int MAX_SPEED = 1200;
 
     static {
         lookUpAutoShoot.add(3.0, 600);
@@ -40,11 +40,14 @@ public class shooter extends SubsystemBase{
         lookUpAutoShoot.add(10.0, 950);
         lookUpAutoShoot.add(11.0, 1000);
         //far
-        lookUpAutoShoot.add(12.0, 920);
+
+        lookUpAutoShoot.add(11.5, 1050);
+        lookUpAutoShoot.add(12.0, 1100);
+
         lookUpAutoShoot.add(13.0, 1020);
         lookUpAutoShoot.add(14.0, 1250);
-        lookUpAutoShoot.add(15.0, 1350);
-        lookUpAutoShoot.add(10000.0, 1300);
+        lookUpAutoShoot.add(15.0, 1250);
+        lookUpAutoShoot.add(10000.0, 1250);
         lookUpAutoShoot.createLUT();
     }
 

@@ -392,8 +392,8 @@ public class twoplayeropmode extends CommandOpMode {
             // With threshold > 0, require velocity to stay above that minimum to keep shooting
             boolean intakeReady = shooterVelocityLatched && currentVelocity > targetSpeed - CONTINUOUS_SHOOT_THRESHOLD;
 
-//            telemetry.addData("DEBUG: Shooter Velocity", currentVelocity);
-//            telemetry.addData("DEBUG: Target Speed", targetSpeed);
+            telemetry.addData("DEBUG: Shooter Velocity", currentVelocity);
+            telemetry.addData("DEBUG: Target Speed", targetSpeed);
 //            telemetry.addData("DEBUG: Stopper Ready? (within " + STOPPER_VELOCITY_THRESHOLD + ")", stopperReady);
 //            telemetry.addData("DEBUG: Velocity Latched?", shooterVelocityLatched);
 //            telemetry.addData("DEBUG: Intake Ready?", intakeReady);
@@ -441,8 +441,8 @@ public class twoplayeropmode extends CommandOpMode {
 
 //        telemetry.addData("=== ROBOT STATUS ===", "");
 //        telemetry.addData("Alliance", goals);
-//        telemetry.addData("Position (x, y)", "%.1f, %.1f", robot.follower.getPose().getX(), robot.follower.getPose().getY());
-//        telemetry.addData("Heading (deg)", "%.1f", Math.toDegrees(robot.follower.getPose().getHeading()));
+        telemetry.addData("Position (x, y)", "%.1f, %.1f", robot.follower.getPose().getX(), robot.follower.getPose().getY());
+        telemetry.addData("Heading (deg)", "%.1f", Math.toDegrees(robot.follower.getPose().getHeading()));
 //        telemetry.addData("", "");
 //
 //        telemetry.addData("=== STOPPER CONTROL ===", "");
@@ -462,7 +462,7 @@ public class twoplayeropmode extends CommandOpMode {
 //        telemetry.addData("Target Goal", getTargetCornerName());
 //        telemetry.addData("Target Backboard", getTargetBackboardName(robot.follower.getPose(), goals));
 //        telemetry.addData("Distance (feet)", "%.2f", getDistanceToTargetFeet(robot.follower.getPose(), goals));
-//        telemetry.addData("Target Angle (deg)", "%.1f", Math.toDegrees(targetHeading));
+        telemetry.addData("Target Angle (deg)", "%.1f", Math.toDegrees(targetHeading));
 //        telemetry.addData("Angle Error (deg)", "%.1f", Math.toDegrees(Math.abs(robot.follower.getPose().getHeading() - targetHeading)));
 //        telemetry.addData("", "");
 //
