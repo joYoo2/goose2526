@@ -301,9 +301,9 @@ public class twoplayeropmode extends CommandOpMode {
                 new SequentialCommandGroup(
                         new InstantCommand(() -> {
                             // Auto-align to nearest corner
-                            double newHeading = calculateTargetHeading(robot.follower.getPose(), goals);
-                            targetHeading = newHeading;
-                            robot.follower.turnToDegrees(Math.toDegrees(newHeading));
+                            //double newHeading = calculateTargetHeading(robot.follower.getPose(), goals);
+                            //targetHeading = newHeading;
+                            robot.follower.turnToDegrees(Math.toDegrees(targetHeading));
                             robot.follower.setConstraints(new PathConstraints(
                                     0.995,
                                     200,

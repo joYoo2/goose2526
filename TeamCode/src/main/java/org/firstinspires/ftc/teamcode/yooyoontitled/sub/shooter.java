@@ -38,11 +38,11 @@ public class shooter extends SubsystemBase{
         lookUpAutoShoot.add(8.0, 800);
         lookUpAutoShoot.add(9.0, 850);
         lookUpAutoShoot.add(10.0, 950);
-        lookUpAutoShoot.add(11.0, 1000);
+        lookUpAutoShoot.add(11.0, 950);
         //far
 
-        lookUpAutoShoot.add(11.5, 1050);
-        lookUpAutoShoot.add(12.0, 1100);
+        lookUpAutoShoot.add(11.5, 1000);
+        lookUpAutoShoot.add(12.0, 1050);
 
         lookUpAutoShoot.add(13.0, 1020);
         lookUpAutoShoot.add(14.0, 1250);

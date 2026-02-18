@@ -53,31 +53,31 @@ public class redfarsecond extends CommandOpMode{
                             new BezierCurve(
                                     new Pose(62.370, 14.188).mirror(),
                                     new Pose(38.883, 11.340).mirror(),
-                                    new Pose(Robot.robotLength/2-0.1, 10.140).mirror()
+                                    new Pose(Robot.robotLength/2-0.1, 13.140).mirror()
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180-105), Math.toRadians(180-180))
                     .build();
 
             pileback = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(Robot.robotLength/2-0.1, 10.140).mirror(),
-                                    new Pose(45.888, Robot.robotWidth/2 + 1).mirror()
+                                    new Pose(Robot.robotLength/2-0.1, 13.140).mirror(),
+                                    new Pose(45.888, 10.140).mirror()
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-180))
                     .build();
 
             pilepickup = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(45.888, Robot.robotWidth/2 + 1).mirror(),
-                                    new Pose(43.888, Robot.robotWidth/2+0.6).mirror(),
-                                    new Pose(Robot.robotLength/2-0.1, Robot.robotWidth/2 +0.4).mirror()
+                                    new Pose(45.888, 13.140).mirror(),
+                                    new Pose(43.888, Robot.robotWidth/2+1).mirror(),
+                                    new Pose(Robot.robotLength/2-0.1, Robot.robotWidth/2 +1).mirror()
                             )
 
                     ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-180))
                     .build();
             pileback2 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(Robot.robotLength/2-0.1, Robot.robotWidth/2 +0.4).mirror(),
+                                    new Pose(Robot.robotLength/2-0.1, Robot.robotWidth/2 +1).mirror(),
                                     new Pose(Robot.robotLength/2-0.5+10, 10).mirror()
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(180-180), Math.toRadians(180-180))
