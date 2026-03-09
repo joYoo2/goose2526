@@ -4,84 +4,67 @@ import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import org.firstinspires.ftc.teamcode.yooyoontitled.Globe;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
 
 public class Lights extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
 
-    public double RED = 0.28;
-    public double ORANGE = 0.33;
-    public double YELLOW = 0.39;
-    public double SAGE = 0.44;
-    public double GREEN = 0.5;
-    public double AZURE = 0.555;
-    public double BLUE = 0.611;
-    public double INDIGO = 0.666;
-    public double VIOLET = 0.72;
-    public double WHITE = 1;
-    public double OFF = 0;
+    public static final double RED    = 0.28;
+    public static final double ORANGE = 0.33;
+    public static final double YELLOW = 0.39;
+    public static final double SAGE   = 0.44;
+    public static final double GREEN  = 0.5;
+    public static final double AZURE  = 0.555;
+    public static final double BLUE   = 0.611;
+    public static final double INDIGO = 0.666;
+    public static final double VIOLET = 0.72;
+    public static final double WHITE  = 1.0;
+    public static final double OFF    = 0.0;
 
     public double constantColor = ORANGE;
 
-    public void init(){
-    }
+    public static LightsState lightsState = LightsState.TEAM_COLOR;
 
-    public static LightsState lightsState;
-
-    public enum LightsState{
+    public enum LightsState {
         SHOOTER_READY,
+        INTAKE_ACTIVE,
         TEAM_COLOR,
         CONSTANT_COLOR
     }
 
-    public void updateLights(){
-        if(lightsState == LightsState.SHOOTER_READY){
-            shooterReady();
-        }
-
-        if(lightsState == LightsState.TEAM_COLOR){
-            teamColor();
-        }
-
-        if(lightsState == LightsState.CONSTANT_COLOR){
-            /// WHEN USING CONSTANT COLOR MAKE SURE TO CHANGE CONSTANT COLOR VARIABLE
-            constantColor(constantColor);
-        }
+    /**
+     * Green = shooter ready, Red = still spinning up.
+     */
+    private void shooterReady() {
+        robot.lightsServo.setPosition(Globe.shooterReady ? GREEN : RED);
     }
 
     /**
-     * Shows if shooter is ready to shoot
-     * RED = not ready
-     * GREEN = ready to shoot
+     * Pulses orange while intake is running.
      */
-    public void shooterReady(){
-        if(!shooterReady){
-            robot.lightning.setPosition(RED);
-        }else{
-            robot.lightning.setPosition(GREEN);
-        }
+    private void intakeActive() {
+        robot.lightsServo.setPosition(ORANGE);
     }
 
     /**
-     * Shows the team color
-     * RED = Red alliance
-     * BLUE = Blue alliance
+     * Shows alliance color.
      */
-    public void teamColor(){
-        if(goals == GoalColor.RED_GOAL){
-            robot.lightning.setPosition(RED);
-        }else{
-            robot.lightning.setPosition(BLUE);
-        }
+    private void teamColor() {
+        robot.lightsServo.setPosition(goalColor == GoalColor.RED_GOAL ? RED : BLUE);
     }
 
-    public void constantColor(double color){
-        robot.lightning.setPosition(color);
+    private void constantColor(double color) {
+        robot.lightsServo.setPosition(color);
     }
 
-    //periodic runs in a loop
     @Override
-    public void periodic(){
-        updateLights();
+    public void periodic() {
+        switch (lightsState) {
+            case SHOOTER_READY:   shooterReady();         break;
+            case INTAKE_ACTIVE:   intakeActive();         break;
+            case TEAM_COLOR:      teamColor();            break;
+            case CONSTANT_COLOR:  constantColor(constantColor); break;
+        }
     }
 }

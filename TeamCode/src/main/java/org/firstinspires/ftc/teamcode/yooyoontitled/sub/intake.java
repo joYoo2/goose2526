@@ -1,40 +1,78 @@
 package org.firstinspires.ftc.teamcode.yooyoontitled.sub;
 
+import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
+
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import org.firstinspires.ftc.teamcode.yooyoontitled.Globe;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
-public class intake extends SubsystemBase {
+
+public class Intake extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
-    private final float strength = 1f;
 
-    public void init(){
+    public enum IntakeState { IDLE, INTAKING, REVERSED }
 
+    private IntakeState state = IntakeState.IDLE;
+    private boolean lowerSpinning = true;
+
+    public void setState(IntakeState state) {
+        this.state = state;
     }
 
-    public void start(){
-        robot.intakeL.set(strength);
-        robot.intakeR.set(strength);
-    }
-    public void slow(){
-        robot.intakeL.set(0.1);
-        robot.intakeR.set(0.1);
+    public IntakeState getState() {
+        return state;
     }
 
-    public void setSpeed(float n){
-        robot.intakeL.set(n);
-        robot.intakeR.set(n);
+    public void toggleLowerSpinning() {
+        lowerSpinning = !lowerSpinning;
     }
 
-    public void stop(){
-        robot.intakeL.set(0);
-        robot.intakeR.set(0);
+    public void lowerIntake() {
+        robot.intakeLiftLeft.set(1-LIFT_LOWERED);
+        robot.intakeLiftRight.set(LIFT_LOWERED);
     }
 
-    public void reverse(){
-        robot.intakeL.set(-strength);
-        robot.intakeR.set(-strength);
+    public void raiseIntake() {
+        robot.intakeLiftLeft.set(1-LIFT_RAISED);
+        robot.intakeLiftRight.set(LIFT_RAISED);
     }
 
+    @Override
+    public void periodic() {
+        double lower, upper;
 
+        if (state == IntakeState.REVERSED) {
+            lower = INTAKE_REVERSE_SPEED;
+            upper = INTAKE_REVERSE_SPEED;
+        } else if (state == IntakeState.INTAKING || Globe.shooterReady) {
+            robot.kickServo.setPower(KICK_INTAKE);
+            lower = INTAKE_LOWER_SPEED;
+            upper = Globe.shooterReady ? INTAKE_UPPER_FEED_SPEED : INTAKE_UPPER_PASSIVE_SPEED;
 
+        } else {
+            lower = lowerSpinning ? INTAKE_LOWER_SPEED : 0;
+            upper = 0;
+        }
+
+        robot.intakeLower.set(lower);
+        robot.intakeUpper.set(upper);
+
+        // Lift: raised when intaking or reversing, lowered when idle
+        if (state == IntakeState.INTAKING || state == IntakeState.REVERSED) {
+            raiseIntake();
+        } else {
+            lowerIntake();
+        }
+
+        // Kick servo: forward when shooting/ejecting, reverse when intaking, stopped otherwise
+        if (Globe.shooterReady) {
+            robot.kickServo.setPower(KICK_OUTTAKE);
+        } else if (state == IntakeState.INTAKING) {
+            robot.kickServo.setPower(KICK_INTAKE);
+        } else if (state == IntakeState.REVERSED){
+            robot.kickServo.setPower(KICK_REVERSE);
+        } else {
+            robot.kickServo.setPower(KICK_STOP);
+        }
+    }
 }

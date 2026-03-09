@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
-@TeleOp(name = "Servo Test", group = "Test")
+//@TeleOp(name = "Servo Test", group = "Test")
 public class ServoTestOpMode extends LinearOpMode {
     boolean shooting;
     @Override

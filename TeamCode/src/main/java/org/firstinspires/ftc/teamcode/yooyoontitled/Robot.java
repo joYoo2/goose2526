@@ -3,65 +3,69 @@ package org.firstinspires.ftc.teamcode.yooyoontitled;
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.localization.PoseTracker;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
-import com.seattlesolvers.solverslib.command.ConditionalCommand;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.hardware.SimpleServo;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
-import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
-import com.seattlesolvers.solverslib.util.InterpLUT;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Drivetrain;
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Intake;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights;
-import org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake;
-import org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter;
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Shooter;
+import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Turret;
 
 import java.util.List;
+
 public class Robot {
-    //eventually remove
-    private final Pose autoEndPose = new Pose(0.5*robotWidth, 0.5*robotLength, Math.toRadians(90)); //e
 
-    public MotorEx leftFront, leftRear, rightRear, rightFront; //drivetrain wheels
-    public MotorEx shooter1;
-    public MotorEx shooter2;
-    public Motor.Encoder shooterEncoder;
+    // Drive motors
+    public MotorEx leftFront, leftRear, rightFront, rightRear;
 
-    public shooter shooter;
+    // Shooter motors (shooterLeft is master — has encoder)
+    public MotorEx shooterLeft, shooterRight;
 
-    public MotorEx intakeR;
-    public MotorEx intakeL;
+    // Intake motors
+    public MotorEx intakeLower, intakeUpper;
 
-    public Servo lightning;
+    // Servos
+    public CRServo kickServo;
+    public ServoEx hoodServo;
+    public ServoEx intakeLiftLeft, intakeLiftRight;
+    public CRServo turretLeft, turretRight;
+    public Servo lightsServo;
 
-    public intake intake;
+    // Limelight
+    public Limelight3A limelight;
 
-    public ServoEx rampServo, stopperServo;
-
-    public Lights lights;
-    public static double robotLength = 17.775591;
-    public static double robotWidth = 15.68;
-
+    // Pedro Pathing follower
     public Follower follower;
-    public PoseTracker poseUpdater;
 
-    /// the next two are for optimizing loop times
+    // Subsystems
+    public Drivetrain drivetrain;
+    public Shooter shooter;
+    public Intake intake;
+    public Lights lights;
+    public Turret turret;
+
+    // Bulk caching
     public List<LynxModule> allHubs;
     public LynxModule ControlHub;
 
+    public static final double robotWidth  = 15.68;
+    public static final double robotLength = 17.775591;
 
     private static Robot instance = new Robot();
     public boolean enabled;
 
     public static Robot getInstance() {
-        if(instance == null){
+        if (instance == null) {
             instance = new Robot();
         }
         instance.enabled = true;
@@ -69,83 +73,90 @@ public class Robot {
     }
 
     public void init(HardwareMap hardwareMap) {
+        // --- Drive motors ---
+        leftFront  = new MotorEx(hardwareMap, "leftFront",  Motor.GoBILDA.RPM_435);
+        leftRear   = new MotorEx(hardwareMap, "leftRear",   Motor.GoBILDA.RPM_435);
         rightFront = new MotorEx(hardwareMap, "rightFront", Motor.GoBILDA.RPM_435);
-        leftFront = new MotorEx(hardwareMap, "leftFront", Motor.GoBILDA.RPM_435);
-        rightRear = new MotorEx(hardwareMap, "rightRear", Motor.GoBILDA.RPM_435);
-        leftRear = new MotorEx(hardwareMap, "leftRear", Motor.GoBILDA.RPM_435);
+        rightRear  = new MotorEx(hardwareMap, "rightRear",  Motor.GoBILDA.RPM_435);
 
-        rightFront.setInverted(true);
-        rightRear.setInverted(true);
         leftFront.setInverted(true);
         leftRear.setInverted(true);
-        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        rightRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        rightFront.setInverted(true);
+        rightRear.setInverted(true);
+
         leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         leftRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        rightRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
+        // --- Shooter motors ---
+        shooterLeft = new MotorEx(hardwareMap, "shooterLeft", Motor.GoBILDA.BARE);
+        shooterLeft.setRunMode(Motor.RunMode.RawPower);
+        shooterLeft.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        shooterLeft.setInverted(true);
 
+        shooterRight = new MotorEx(hardwareMap, "shooterRight", Motor.GoBILDA.BARE);
+        shooterRight.setRunMode(Motor.RunMode.RawPower);
+        shooterRight.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        shooterRight.setInverted(true);
 
-        intakeR = new MotorEx(hardwareMap, "intakeR", Motor.GoBILDA.RPM_1150);
-        intakeR.setRunMode(Motor.RunMode.RawPower);
+        // --- Intake motors ---
+        intakeLower = new MotorEx(hardwareMap, "intakeLower", Motor.GoBILDA.RPM_1150);
+        intakeLower.setRunMode(Motor.RunMode.RawPower);
 
-        intakeL = new MotorEx(hardwareMap, "intakeL", Motor.GoBILDA.RPM_1150);
-        intakeL.setRunMode(Motor.RunMode.RawPower);
-        intakeL.setInverted(true);
+        intakeUpper = new MotorEx(hardwareMap, "intakeUpper", Motor.GoBILDA.RPM_1150);
+        intakeUpper.setRunMode(Motor.RunMode.RawPower);
+        intakeUpper.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        intakeUpper.setInverted(true);
 
-        shooter1 = new MotorEx(hardwareMap, "shooter1", Motor.GoBILDA.BARE);
-        shooter1.setRunMode(Motor.RunMode.RawPower);
-        shooter1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        // --- Servos ---
+        kickServo       = hardwareMap.get(CRServo.class, "kick");
+        hoodServo       = new ServoEx(hardwareMap, "hood");
+        intakeLiftLeft  = new ServoEx(hardwareMap, "intakeLiftLeft");
+        intakeLiftRight = new ServoEx(hardwareMap, "intakeLiftRight");
+        //lightsServo     = hardwareMap.get(Servo.class, "lights");
 
+        // Safe initial positions
+        kickServo.setPower(Globe.KICK_STOP);
+        hoodServo.set(Globe.HOOD_STATIC_POS);
+        intakeLiftLeft.set(Globe.LIFT_RAISED);
+        intakeLiftRight.set(Globe.LIFT_RAISED);
 
-        shooter2 = new MotorEx(hardwareMap, "shooter2", Motor.GoBILDA.BARE);
-        shooter2.setRunMode(Motor.RunMode.RawPower);
-        shooter2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        shooter2.setInverted(true);
+        turretLeft  = hardwareMap.get(CRServo.class, "turretLeft");
+        turretRight = hardwareMap.get(CRServo.class, "turretRight");
+        turretLeft.setPower(0);
+        turretRight.setPower(0);
 
-        shooterEncoder = new Motor(hardwareMap, "shooter1").encoder;
+        // --- Limelight ---
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(Globe.LIMELIGHT_PIPELINE);
+        limelight.start();
 
+        // --- Subsystems ---
+        shooter    = new Shooter();
+        intake     = new Intake();
+        //lights     = new Lights();
+        drivetrain = new Drivetrain();
+        turret     = new Turret();
 
-        stopperServo = new ServoEx(hardwareMap, "stopper");
-
-
-        lightning = hardwareMap.get(Servo.class, "light");
-
-        lights = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.Lights();
-
-        intake = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.intake();
-        shooter = new org.firstinspires.ftc.teamcode.yooyoontitled.sub.shooter();
-
-
-
+        // --- Follower ---
         follower = Constants.createFollower(hardwareMap);
 
-        if(opModeType.equals(OpModeType.TELEOP)) {
+        if (opModeType.equals(OpModeType.TELEOP)) {
             follower.setStartingPose(autoEndPose);
             follower.startTeleopDrive();
-
-        } else{
-            //follower.setStartingPose(new Pose(0, 0, 0));
         }
 
-        //for optimizing loop times
-        // Bulk reading enabled!
-        // AUTO mode will bulk read by default and will redo and clear cache once the exact same read is done again
-        // MANUAL mode will bulk read once per loop but needs to be manually cleared
-        // Also in opModes only clear ControlHub cache as it is a hardware write
+        // --- Bulk caching (MANUAL mode for optimized loop times) ---
         allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+            hub.setBulkCachingMode(BulkCachingMode.MANUAL);
             if (hub.isParent() && LynxConstants.isEmbeddedSerialNumber(hub.getSerialNumber())) {
                 ControlHub = hub;
             }
         }
-
-
     }
 
-    /// RUN WHATEVER IS IN THE INIT METHODS IN THE SUBSYSTEMS!!
-    public void initHasMovement() {
-        shooter.init();
-        //kickServo.setPosition(0.5);
-    }
+    /** Called once when TeleOp actually starts (allows servo movement during init). */
+    public void initHasMovement() { }
 }

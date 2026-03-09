@@ -15,29 +15,32 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
+
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(10.1)
+            .mass(0)                                                                    // TODO: re-tune — robot mass in kg
             .holdPointHeadingScaling(1)
-            .forwardZeroPowerAcceleration(-40.760427961821634)
-            .lateralZeroPowerAcceleration(-65.68463300205276)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.2, 0, 0.02, 0.02))
-            .headingPIDFCoefficients(new PIDFCoefficients(1.5, 0, 0.055, 0.02))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.02, 0, 0.00000001, 0.6, 0.07))
+            .forwardZeroPowerAcceleration(0)                                            // TODO: re-tune — run forward decel test
+            .lateralZeroPowerAcceleration(0)                                            // TODO: re-tune — run lateral decel test
+            .translationalPIDFCoefficients(new PIDFCoefficients(0, 0, 0, 0))           // TODO: re-tune translational PIDF
+            .headingPIDFCoefficients(new PIDFCoefficients(0, 0, 0, 0))                 // TODO: re-tune heading PIDF
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0, 0, 0, 0, 0))        // TODO: re-tune drive PIDF
             ;
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
+    public static PathConstraints pathConstraints = new PathConstraints(0.5, 50, 0.5, 0.5); // TODO: re-tune path constraints
+
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(-1.41732)
-            .strafePodX(0.9507874)
+            .forwardPodY(0)                                                             // TODO: measure forward pod Y offset (inches)
+            .strafePodX(0)                                                              // TODO: measure strafe pod X offset (inches)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
             ;
+
     public static MecanumConstants driveConstants = new MecanumConstants()
-            .xVelocity(84.91027447557826)
-            .yVelocity(65.38870647760827)
+            .xVelocity(0)                                                               // TODO: re-tune max forward velocity (in/s)
+            .yVelocity(0)                                                               // TODO: re-tune max lateral velocity (in/s)
             .leftFrontMotorName("leftFront")
             .leftRearMotorName("leftRear")
             .rightFrontMotorName("rightFront")
@@ -47,6 +50,7 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             ;
+
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)
