@@ -3,9 +3,10 @@ package org.firstinspires.ftc.teamcode.yooyoontitled;
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 import com.pedropathing.follower.Follower;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
+
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -35,14 +36,11 @@ public class Robot {
     public MotorEx intakeLower, intakeUpper;
 
     // Servos
-    public CRServo kickServo;
     public ServoEx hoodServo;
     public ServoEx intakeLiftLeft, intakeLiftRight;
     public CRServo turretLeft, turretRight;
+    public AnalogInput turretEncoder;
     public Servo lightsServo;
-
-    // Limelight
-    public Limelight3A limelight;
 
     // Pedro Pathing follower
     public Follower follower;
@@ -110,14 +108,12 @@ public class Robot {
         intakeUpper.setInverted(true);
 
         // --- Servos ---
-        kickServo       = hardwareMap.get(CRServo.class, "kick");
         hoodServo       = new ServoEx(hardwareMap, "hood");
         intakeLiftLeft  = new ServoEx(hardwareMap, "intakeLiftLeft");
         intakeLiftRight = new ServoEx(hardwareMap, "intakeLiftRight");
         //lightsServo     = hardwareMap.get(Servo.class, "lights");
 
         // Safe initial positions
-        kickServo.setPower(Globe.KICK_STOP);
         hoodServo.set(Globe.HOOD_STATIC_POS);
         intakeLiftLeft.set(Globe.LIFT_RAISED);
         intakeLiftRight.set(Globe.LIFT_RAISED);
@@ -126,11 +122,7 @@ public class Robot {
         turretRight = hardwareMap.get(CRServo.class, "turretRight");
         turretLeft.setPower(0);
         turretRight.setPower(0);
-
-        // --- Limelight ---
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(Globe.LIMELIGHT_PIPELINE);
-        limelight.start();
+        turretEncoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
 
         // --- Subsystems ---
         shooter    = new Shooter();

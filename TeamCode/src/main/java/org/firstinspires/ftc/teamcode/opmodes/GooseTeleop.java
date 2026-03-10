@@ -220,7 +220,8 @@ public class GooseTeleop extends CommandOpMode {
         telemetry.addData("Adjust Speed", adjustSpeed);
         telemetry.addData("Intake State", robot.intake.getState());
         telemetry.addData("Turret Mode", robot.turret.getMode());
-        telemetry.addData("Turret Pos", "%.2f", robot.turret.getTurretPosition());
+        telemetry.addData("Turret Angle", "%.1f deg", robot.turret.getTurretDegrees());
+        telemetry.addData("Aim Error", "%.1f deg", robot.turret.lastError);
         telemetry.update();
 
         robot.follower.update();

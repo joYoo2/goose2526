@@ -2,15 +2,12 @@ package org.firstinspires.ftc.teamcode.yooyoontitled.sub;
 
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import org.firstinspires.ftc.teamcode.yooyoontitled.Globe;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
-
-import java.util.List;
 
 public class Turret extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
@@ -19,87 +16,148 @@ public class Turret extends SubsystemBase {
 
     private AimMode mode = AimMode.MANUAL;
 
-    // Future use: offset in degrees from tag center (e.g. for angled shots or velocity lead)
-    private double aimOffset = 0.0;
+    // Encoder constants
+    static final double VOLTS_PER_TURN = 0.5570;
+    static final double TURRET_DEG_PER_SERVO_TURN = 360.0 * 28.0 / 70.0; // = 144.0
+    static final double DIRECTION = -1.0; // flip if turret drives wrong way
 
-    // Soft limit: accumulates power * dt each loop, clamped to ±TURRET_SOFT_LIMIT
-    private double turretPosition = 0.0;
-    private final ElapsedTime timer = new ElapsedTime();
+    // Encoder tracking
+    private double prevVoltage;
+    private int turnCount = 0;
+    private double zeroVoltageTotal; // rawTotal at init (turret facing forward)
+    private double prevError = 0.0;
 
-    public AimMode getMode() {
-        return mode;
+    // PID gains — public static so FTC Dashboard can tune live
+    public static double KP = 0.02;
+    public static double KI = 0.0;
+    public static double KD = 0.0; // zeroed: derivative on noisy analog+pose signal causes oscillation
+
+    // Anti-shake: power below this threshold is rounded to zero
+    static final double MIN_POWER = 0.10;
+    // Hysteresis: once stopped inside deadband, don't restart until error exceeds this
+    static final double TURRET_DEADBAND_EXIT_DEG = 7.0;
+
+    // PID state
+    private double integral  = 0.0;
+    private final ElapsedTime pidTimer = new ElapsedTime();
+    private boolean inDeadband = false;
+
+    // Telemetry — read by OpMode / tuning opmode
+    public double lastError  = 0.0;
+    public double lastOutput = 0.0;
+
+    public Turret() {
+        prevVoltage = robot.turretEncoder.getVoltage();
+        zeroVoltageTotal = prevVoltage; // turnCount=0 at init
     }
+
+    public AimMode getMode() { return mode; }
 
     public void setMode(AimMode mode) {
         this.mode = mode;
-        if (mode == AimMode.MANUAL) applyPower(0);
+        if (mode == AimMode.MANUAL) {
+            resetPID();
+            stop();
+        }
     }
 
     public void toggleMode() {
         setMode(mode == AimMode.AUTO_AIM ? AimMode.MANUAL : AimMode.AUTO_AIM);
     }
 
-    public void setAimOffset(double degrees) {
-        aimOffset = degrees;
+    public void resetPID() {
+        integral  = 0.0;
+        prevError = 0.0;
+        pidTimer.reset();
     }
 
-    // Manual control — always available regardless of mode
-    public void turnLeft()  { applyPower(-TURRET_SPEED); }
-    public void turnRight() { applyPower(TURRET_SPEED);  }
-    public void stop()      { applyPower(0);             }
+    public void turnLeft()  { setPower(-TURRET_SPEED); }
+    public void turnRight() { setPower(TURRET_SPEED);  }
+    public void stop()      { setPower(0);             }
 
-    public double getTurretPosition() { return turretPosition; }
-
-    private void applyPower(double power) {
-        double dt = timer.seconds();
-        timer.reset();
-
-        // Soft limit: prevent winding past safe range
-        if (turretPosition >= TURRET_SOFT_LIMIT  && power > 0) power = 0;
-        if (turretPosition <= -TURRET_SOFT_LIMIT && power < 0) power = 0;
-
-        turretPosition += power * dt;
-
+    private void setPower(double power) {
+        lastOutput = power;
         robot.turretLeft.setPower(power);
         robot.turretRight.setPower(power);
     }
 
+    /** Call every loop to track multi-turn wraps. */
+    private void updateEncoder() {
+        double voltage = robot.turretEncoder.getVoltage();
+        double delta = voltage - prevVoltage;
+        double threshold = VOLTS_PER_TURN / 2.0;
+        if (delta > threshold)       turnCount--;
+        else if (delta < -threshold) turnCount++;
+        prevVoltage = voltage;
+    }
+
+    /** Current turret angle in degrees (0 = forward at init). */
+    public double getTurretDegrees() {
+        double rawTotal = turnCount * VOLTS_PER_TURN + prevVoltage;
+        double servoTurns = (rawTotal - zeroVoltageTotal) / VOLTS_PER_TURN;
+        return servoTurns * TURRET_DEG_PER_SERVO_TURN;
+    }
+
+    private double normalizeAngle(double degrees) {
+        degrees = degrees % 360;
+        if (degrees > 180) degrees -= 360;
+        if (degrees <= -180) degrees += 360;
+        return degrees;
+    }
+
     @Override
     public void periodic() {
+        updateEncoder(); // always track wraps, even in MANUAL mode
+
         if (mode != AimMode.AUTO_AIM) return;
 
-        LLResult result = robot.limelight.getLatestResult();
-        if (result == null || !result.isValid()) {
-            applyPower(0);
-            return;
-        }
+        // Desired turret heading from robot pose + goal position
+        Pose robotPose = robot.follower.getPose();
+        Pose goal = (Globe.goalColor == Globe.GoalColor.BLUE_GOAL)
+                ? Globe.BLUE_GOAL : Globe.RED_GOAL;
 
-        int targetId = (Globe.goalColor == Globe.GoalColor.BLUE_GOAL)
-                ? APRIL_TAG_BLUE_GOAL : APRIL_TAG_RED_GOAL;
+        double fieldAngle = Math.atan2(
+                goal.getY() - robotPose.getY(),
+                goal.getX() - robotPose.getX());
+        double desiredDeg = normalizeAngle(
+                Math.toDegrees(fieldAngle - robotPose.getHeading()));
 
-        List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
-        LLResultTypes.FiducialResult target = null;
-        for (LLResultTypes.FiducialResult tag : tags) {
-            if (tag.getFiducialId() == targetId) {
-                target = tag;
-                break;
+        double currentDeg = getTurretDegrees();
+        double error = normalizeAngle(desiredDeg - currentDeg);
+
+        lastError = error;
+
+        // Hysteretic deadband — prevents chattering at the boundary
+        double enterThreshold = TURRET_DEADBAND_DEG;
+        double exitThreshold  = TURRET_DEADBAND_EXIT_DEG;
+        if (inDeadband) {
+            if (Math.abs(error) > exitThreshold) {
+                inDeadband = false;
+            } else {
+                stop();
+                return;
+            }
+        } else {
+            if (Math.abs(error) < enterThreshold) {
+                inDeadband = true;
+                stop();
+                return;
             }
         }
 
-        if (target == null) {
-            applyPower(0);
-            return;
-        }
+        double dt = pidTimer.seconds();
+        pidTimer.reset();
+        if (dt <= 0) dt = 0.02;
 
-        double tx = target.getTargetXDegrees() + aimOffset;
+        double derivative = (error - prevError) / dt;
+        integral += error * dt;
+        integral = Math.max(-20.0, Math.min(20.0, integral));
 
-        if (Math.abs(tx) < TURRET_DEADBAND_DEG) {
-            applyPower(0);
-            return;
-        }
-
-        double power = TURRET_KP * tx;
+        double power = KP * error + KI * integral + KD * derivative;
         power = Math.max(-TURRET_SPEED, Math.min(TURRET_SPEED, power));
-        applyPower(power);
+        if (Math.abs(power) < MIN_POWER) power = 0;
+        setPower(DIRECTION * power);
+
+        prevError = error;
     }
 }

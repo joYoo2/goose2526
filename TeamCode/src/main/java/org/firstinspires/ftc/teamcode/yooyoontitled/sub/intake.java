@@ -45,7 +45,6 @@ public class Intake extends SubsystemBase {
             lower = INTAKE_REVERSE_SPEED;
             upper = INTAKE_REVERSE_SPEED;
         } else if (state == IntakeState.INTAKING || Globe.shooterReady) {
-            robot.kickServo.setPower(KICK_INTAKE);
             lower = INTAKE_LOWER_SPEED;
             upper = Globe.shooterReady ? INTAKE_UPPER_FEED_SPEED : INTAKE_UPPER_PASSIVE_SPEED;
 
@@ -65,14 +64,6 @@ public class Intake extends SubsystemBase {
         }
 
         // Kick servo: forward when shooting/ejecting, reverse when intaking, stopped otherwise
-        if (Globe.shooterReady) {
-            robot.kickServo.setPower(KICK_OUTTAKE);
-        } else if (state == IntakeState.INTAKING) {
-            robot.kickServo.setPower(KICK_INTAKE);
-        } else if (state == IntakeState.REVERSED){
-            robot.kickServo.setPower(KICK_REVERSE);
-        } else {
-            robot.kickServo.setPower(KICK_STOP);
-        }
+
     }
 }
