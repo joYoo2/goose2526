@@ -8,6 +8,7 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import org.firstinspires.ftc.teamcode.yooyoontitled.Globe;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
+import org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils;
 
 public class Turret extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
@@ -17,9 +18,9 @@ public class Turret extends SubsystemBase {
     private AimMode mode = AimMode.MANUAL;
 
     // Encoder constants
-    static final double VOLTS_PER_TURN = 0.5570;
+    static final double VOLTS_PER_TURN = 3.2;
     static final double TURRET_DEG_PER_SERVO_TURN = 360.0 * 28.0 / 70.0; // = 144.0
-    static final double DIRECTION = -1.0; // flip if turret drives wrong way
+    public static final double DIRECTION = -1.0; // flip if turret drives wrong way
 
     // Encoder tracking
     private double prevVoltage;
@@ -33,9 +34,9 @@ public class Turret extends SubsystemBase {
     public static double KD = 0.0; // zeroed: derivative on noisy analog+pose signal causes oscillation
 
     // Anti-shake: power below this threshold is rounded to zero
-    static final double MIN_POWER = 0.10;
+    public static final double MIN_POWER = 0.10;
     // Hysteresis: once stopped inside deadband, don't restart until error exceeds this
-    static final double TURRET_DEADBAND_EXIT_DEG = 7.0;
+    static final double TURRET_DEADBAND_EXIT_DEG = 3.0;
 
     // PID state
     private double integral  = 0.0;
@@ -71,9 +72,13 @@ public class Turret extends SubsystemBase {
         pidTimer.reset();
     }
 
-    public void turnLeft()  { setPower(-TURRET_SPEED); }
-    public void turnRight() { setPower(TURRET_SPEED);  }
-    public void stop()      { setPower(0);             }
+    public void turnLeft() {
+        setPower(-TURRET_SPEED);
+    }
+    public void turnRight() {
+        setPower(TURRET_SPEED);
+    }
+    public void stop() { setPower(0); }
 
     private void setPower(double power) {
         lastOutput = power;
@@ -113,17 +118,13 @@ public class Turret extends SubsystemBase {
 
         // Desired turret heading from robot pose + goal position
         Pose robotPose = robot.follower.getPose();
-        Pose goal = (Globe.goalColor == Globe.GoalColor.BLUE_GOAL)
-                ? Globe.BLUE_GOAL : Globe.RED_GOAL;
-
-        double fieldAngle = Math.atan2(
-                goal.getY() - robotPose.getY(),
-                goal.getX() - robotPose.getX());
+        double fieldAngle = ShootingUtils.calculateTargetHeading(robotPose, Globe.goalColor);
         double desiredDeg = normalizeAngle(
                 Math.toDegrees(fieldAngle - robotPose.getHeading()));
+        desiredDeg = Math.max(-TURRET_LIMIT_DEG, Math.min(TURRET_LIMIT_DEG, desiredDeg));
 
         double currentDeg = getTurretDegrees();
-        double error = normalizeAngle(desiredDeg - currentDeg);
+        double error = desiredDeg - currentDeg;
 
         lastError = error;
 

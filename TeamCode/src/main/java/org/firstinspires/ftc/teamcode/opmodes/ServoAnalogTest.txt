@@ -35,7 +35,7 @@ public class ServoAnalogTest extends LinearOpMode {
     static final double MANUAL_SPEED  = 0.4;
     static final double HOLD_SPEED    = 0.4;
     static final double HOLD_KP       = 2.0;
-    static final double DEADBAND_VOLT = 0.01;
+    static final double DEADBAND_VOLT = 0.31;
     static final double NUDGE_TURNS   = 0.1;
     // Flip to -1.0 if hold drives the wrong direction (servo voltage anti-correlates with power)
     static final double DIRECTION     = -1.0;

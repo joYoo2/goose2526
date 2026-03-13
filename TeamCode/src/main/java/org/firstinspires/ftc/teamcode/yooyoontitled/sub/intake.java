@@ -25,6 +25,7 @@ public class Intake extends SubsystemBase {
 
     public void toggleLowerSpinning() {
         lowerSpinning = !lowerSpinning;
+
     }
 
     public void lowerIntake() {
@@ -44,13 +45,17 @@ public class Intake extends SubsystemBase {
         if (state == IntakeState.REVERSED) {
             lower = INTAKE_REVERSE_SPEED;
             upper = INTAKE_REVERSE_SPEED;
+        } else if (Globe.shootingActive && !Globe.shooterReady) {
+            // Shooter spinning up — stop intake so balls don't get pushed into a closed stopper
+            lower = 0;
+            upper = 0;
         } else if (state == IntakeState.INTAKING || Globe.shooterReady) {
             lower = INTAKE_LOWER_SPEED;
             upper = Globe.shooterReady ? INTAKE_UPPER_FEED_SPEED : INTAKE_UPPER_PASSIVE_SPEED;
 
         } else {
             lower = lowerSpinning ? INTAKE_LOWER_SPEED : 0;
-            upper = 0;
+            upper = lowerSpinning ? INTAKE_UPPER_IDLE_SPEED : 0;
         }
 
         robot.intakeLower.set(lower);
@@ -65,5 +70,6 @@ public class Intake extends SubsystemBase {
 
         // Kick servo: forward when shooting/ejecting, reverse when intaking, stopped otherwise
 
+        Globe.isIntaking = (state == IntakeState.INTAKING);
     }
 }

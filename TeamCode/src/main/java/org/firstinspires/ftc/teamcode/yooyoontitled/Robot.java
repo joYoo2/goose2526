@@ -38,6 +38,7 @@ public class Robot {
     // Servos
     public ServoEx hoodServo;
     public ServoEx intakeLiftLeft, intakeLiftRight;
+    public ServoEx stopperServo;
     public CRServo turretLeft, turretRight;
     public AnalogInput turretEncoder;
     public Servo lightsServo;
@@ -56,8 +57,8 @@ public class Robot {
     public List<LynxModule> allHubs;
     public LynxModule ControlHub;
 
-    public static final double robotWidth  = 15.68;
-    public static final double robotLength = 17.775591;
+    public static final double robotWidth  = 13.25;
+    public static final double robotLength = 17.5;
 
     private static Robot instance = new Robot();
     public boolean enabled;
@@ -82,10 +83,10 @@ public class Robot {
         rightFront.setInverted(true);
         rightRear.setInverted(true);
 
-        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        leftRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        rightRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        leftRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        rightRear.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
         // --- Shooter motors ---
         shooterLeft = new MotorEx(hardwareMap, "shooterLeft", Motor.GoBILDA.BARE);
@@ -112,6 +113,9 @@ public class Robot {
         intakeLiftLeft  = new ServoEx(hardwareMap, "intakeLiftLeft");
         intakeLiftRight = new ServoEx(hardwareMap, "intakeLiftRight");
         //lightsServo     = hardwareMap.get(Servo.class, "lights");
+
+        stopperServo    = new ServoEx(hardwareMap, "stopper");
+        stopperServo.set(Globe.STOPPER_CLOSED);
 
         // Safe initial positions
         hoodServo.set(Globe.HOOD_STATIC_POS);

@@ -14,6 +14,7 @@ import com.seattlesolvers.solverslib.command.button.Trigger;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
+import org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Intake;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Turret;
 
@@ -24,8 +25,10 @@ public class GooseTeleop extends CommandOpMode {
     private GamepadEx driver, operator;
     private ElapsedTime gameTimer;
 
-    private boolean shooterSpinning = false;
+    private boolean shooterOn = false;
     public static int adjustSpeed = 0;
+    private double hoodPos = HOOD_STATIC_POS;
+    private static final double HOOD_STEP = 0.005;
 
     @Override
     public void initialize() {
@@ -34,6 +37,7 @@ public class GooseTeleop extends CommandOpMode {
         if (goalColor == null) {
             goalColor = GoalColor.RED_GOAL;
         }
+
 
         // DO NOT REMOVE — resets FTCLib command scheduler
         super.reset();
@@ -65,12 +69,23 @@ public class GooseTeleop extends CommandOpMode {
                 new InstantCommand(() -> robot.intake.toggleLowerSpinning())
         );
 
-        // Circle: Toggle shooter spinning
+        // Circle: Toggle shooter on/off entirely
         driver.getGamepadButton(GamepadKeys.Button.CIRCLE).whenPressed(
                 new InstantCommand(() -> {
-                    shooterSpinning = !shooterSpinning;
-                    if (!shooterSpinning) robot.shooter.stop();
-                    gamepad1.rumbleBlips(shooterSpinning ? 2 : 1);
+                    shooterOn = !shooterOn;
+                    if (!shooterOn) robot.shooter.stop();
+                    gamepad1.rumbleBlips(shooterOn ? 2 : 1);
+                })
+        );
+
+        // Cross: Toggle shooting active (full speed vs idle); turning off also disables auto-aim
+        driver.getGamepadButton(GamepadKeys.Button.CROSS).whenPressed(
+                new InstantCommand(() -> {
+                    shootingActive = !shootingActive;
+                    if (!shootingActive && robot.turret.getMode() == Turret.AimMode.AUTO_AIM) {
+                        robot.turret.setMode(Turret.AimMode.MANUAL);
+                    }
+                    gamepad1.rumbleBlips(shootingActive ? 2 : 1);
                 })
         );
 
@@ -144,33 +159,17 @@ public class GooseTeleop extends CommandOpMode {
 
         // ── Gamepad 2 (Operator) ─────────────────────────────────────────────
 
-        // Right bumper: Toggle intake INTAKING ↔ IDLE
-        /*
+        // Right bumper: Increase shooter speed adjustment
         operator.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(
-                new InstantCommand(() -> robot.intake.setState(
-                        robot.intake.getState() == Intake.IntakeState.INTAKING
-                                ? Intake.IntakeState.IDLE
-                                : Intake.IntakeState.INTAKING
-                ))
+                new InstantCommand(() -> adjustSpeed += 25)
         );
 
-        // Left bumper: Toggle intake REVERSED ↔ IDLE
+        // Left bumper: Decrease shooter speed adjustment
         operator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(
-                new InstantCommand(() -> robot.intake.setState(
-                        robot.intake.getState() == Intake.IntakeState.REVERSED
-                                ? Intake.IntakeState.IDLE
-                                : Intake.IntakeState.REVERSED
-                ))
+                new InstantCommand(() -> adjustSpeed -= 25)
         );
-        */
 
-        // D-pad up/down: Shooter speed fine-tune
-        operator.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
-                new InstantCommand(() -> adjustSpeed += 20)
-        );
-        operator.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
-                new InstantCommand(() -> adjustSpeed -= 20)
-        );
+        // D-pad up/down: Hood servo fine-tune (handled in run())
 
         super.run();
     }
@@ -186,13 +185,21 @@ public class GooseTeleop extends CommandOpMode {
         // DO NOT REMOVE — runs FTCLib command scheduler (calls subsystem periodic())
         super.run();
 
-        // Shooter: distance-based target speed, drive motors when spinning
-        if (shooterSpinning) {
-            double targetSpeed = robot.shooter.calculateTargetSpeed() + adjustSpeed;
-            robot.shooter.setTargetSpeed(targetSpeed);
+        // Shooter: when on, spins at full speed (active) or idle speed
+        if (shooterOn) {
+            if (shootingActive) {
+                robot.shooter.setTargetSpeed(robot.shooter.calculateTargetSpeed() + adjustSpeed);
+            } else {
+                robot.shooter.setTargetSpeed(SHOOTER_IDLE_SPEED);
+            }
             robot.shooter.spinUp();
         }
 
+
+        // Hood servo: dpad up/down on operator
+        if (gamepad2.dpad_up)   hoodPos = Math.min(1.0, hoodPos + HOOD_STEP);
+        if (gamepad2.dpad_down) hoodPos = Math.max(0.0, hoodPos - HOOD_STEP);
+        robot.hoodServo.set(hoodPos);
 
         // Drive (field-centric)
         robot.follower.setTeleOpDrive(
@@ -215,10 +222,18 @@ public class GooseTeleop extends CommandOpMode {
         telemetry.addData("Heading", "%.1f deg",
                 Math.toDegrees(robot.follower.getPose().getHeading()));
         telemetry.addData("Alliance", goalColor);
-        telemetry.addData("Shooter", shooterSpinning ? "ON" : "OFF");
+        telemetry.addData("Shooter", shooterOn ? (shootingActive ? "ACTIVE" : "IDLE") : "OFF");
         telemetry.addData("Shooter Ready", shooterReady ? "YES" : "NO");
+        double shooterCurrent = robot.shooter.getCurrentSpeed();
+        double shooterTarget  = robot.shooter.getTargetSpeed();
+        double shooterDist    = ShootingUtils.getDistanceToTargetFeet(robot.follower.getPose(), goalColor);
+        telemetry.addData("Shooter Speed",  "%.0f RPM", shooterCurrent);
+        telemetry.addData("Shooter Target", "%.0f RPM", shooterTarget);
+        telemetry.addData("Shooter Dist",   "%.1f ft",  shooterDist);
+        telemetry.addData("Speed Error",    "%.0f RPM", shooterTarget - shooterCurrent);
         telemetry.addData("Adjust Speed", adjustSpeed);
         telemetry.addData("Intake State", robot.intake.getState());
+        telemetry.addData("Hood Pos", "%.3f", hoodPos);
         telemetry.addData("Turret Mode", robot.turret.getMode());
         telemetry.addData("Turret Angle", "%.1f deg", robot.turret.getTurretDegrees());
         telemetry.addData("Aim Error", "%.1f deg", robot.turret.lastError);

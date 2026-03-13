@@ -10,15 +10,15 @@ import com.pedropathing.geometry.Pose;
  */
 public class ShootingUtils {
 
-    public static final double GOAL_LENGTH = 20; // inches
+    public static final double GOAL_LENGTH = 5; // inches
 
     // Blue goal at (0, 144): extends down (-Y) and right (+X)
     public static final Pose BLUE_CORNER_1 = new Pose(0, 144 - GOAL_LENGTH, 0);
     public static final Pose BLUE_CORNER_2 = new Pose(GOAL_LENGTH, 144, 0);
 
     // Red goal at (144, 144): extends down (-Y) and left (-X)
-    public static final Pose RED_CORNER_1 = new Pose(144, 144 - GOAL_LENGTH, 0);
-    public static final Pose RED_CORNER_2 = new Pose(144 - GOAL_LENGTH, 144, 0);
+    public static final Pose RED_CORNER_1 = new Pose(141.5, 144 - GOAL_LENGTH, 0);
+    public static final Pose RED_CORNER_2 = new Pose(141.5 - GOAL_LENGTH, 144, 0);
 
     /**
      * Calculates the target heading as the average of headings to both goal corners.
