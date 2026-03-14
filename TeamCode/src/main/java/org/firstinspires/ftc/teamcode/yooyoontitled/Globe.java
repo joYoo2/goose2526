@@ -14,6 +14,7 @@ public class Globe {
     public static Pose autoEndPose = new Pose(0, 0, 90);
     public static boolean shooterReady = false;
     public static boolean shootingActive = false;
+    public static boolean shooterSpinup = false;  // full speed without feeding (for testing/warmup)
     public static boolean isIntaking   = false;
 
     // Intake motor speeds
@@ -34,11 +35,17 @@ public class Globe {
     public static final double STOPPER_CLOSED = 0.0;
 
     // Hood servo — static for now
-    public static final double HOOD_STATIC_POS = 0.7;  // TODO: tune on robot
+    public static final double HOOD_STATIC_POS = 1;  // TODO: tune on robot
 
     // Shooter velocity constants
-    public static double SHOOTER_IDLE_SPEED = 600;
-    public static double RAPID_FIRE_THRESHOLD = 0.60; // fraction of target speed to keep shooterReady during rapid fire
+    public static double SHOOTER_IDLE_FRACTION = 0.75; // fraction of target speed when idle
+    public static double RAPID_FIRE_THRESHOLD = 0.80; // fraction of target speed to keep shooterReady during rapid fire
+
+    // Velocity compensation (shoot while moving)
+    public static boolean VELOCITY_COMP_MODE = false; // enables continuous turret tracking + lead compensation
+    public static double BALL_FLIGHT_SPEED = 10;     // estimated ball speed in ft/s (tunable)
+    public static double LEAD_GAIN = 1.0;             // multiplier for lead compensation
+    public static double SPEED_COMP_GAIN = 10;      // RPM adjustment per in/s of robot velocity toward goal
 
     // Goal positions (inches, Pedro coordinate system)
     public static final Pose RED_GOAL  = new Pose(141.5, 144, Math.toRadians(225));
@@ -48,7 +55,7 @@ public class Globe {
     // KP/KI/KD live in Turret.java as public static fields (tunable via FTC Dashboard or TurretPIDTuning opmode)
     public static final double TURRET_SPEED        = 0.5;   // max power, tune on robot
     public static final double TURRET_DEADBAND_DEG = 7.0;   // stop within this many degrees of center
-    public static double TURRET_LIMIT_DEG    = 130.0; // hard angle limit to prevent wire wrap
+    public static double TURRET_LIMIT_DEG    = 120.0; // hard angle limit to prevent wire wrap
 
     // Limelight / April Tag
     public static final int LIMELIGHT_PIPELINE  = 0;  // pipeline index configured for AprilTags

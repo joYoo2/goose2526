@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -13,13 +14,27 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.command.button.Trigger;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
+import org.firstinspires.ftc.teamcode.yooyoontitled.Globe;
 import org.firstinspires.ftc.teamcode.yooyoontitled.Robot;
 import org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Intake;
 import org.firstinspires.ftc.teamcode.yooyoontitled.sub.Turret;
 
-@TeleOp(name = "Goose Teleop")
-public class GooseTeleop extends CommandOpMode {
+/**
+ * Velocity Compensation TeleOp - Shoot while moving!
+ * 
+ * This OpMode enables:
+ * - Continuous turret tracking (no deadband pauses)
+ * - Lead compensation (turret aims ahead based on robot velocity)
+ * - Shooter speed compensation (adjusts RPM based on robot movement toward/away from goal)
+ * 
+ * Tunable parameters in Globe.java (via FTC Dashboard):
+ * - BALL_FLIGHT_SPEED: estimated ball speed in ft/s
+ * - LEAD_GAIN: multiplier for lead compensation
+ * - SPEED_COMP_GAIN: RPM adjustment per in/s of robot velocity
+ */
+@TeleOp(name = "Velocity Compensation", group = "Experimental")
+public class VelocityCompensationTeleop extends CommandOpMode {
 
     private final Robot robot = Robot.getInstance();
     private GamepadEx driver, operator;
@@ -30,14 +45,21 @@ public class GooseTeleop extends CommandOpMode {
     private double hoodPos = HOOD_STATIC_POS;
     private static final double HOOD_STEP = 0.005;
 
+    // Velocity compensation telemetry values
+    private double lastSpeedComp = 0;
+    private double lastRobotVelX = 0;
+    private double lastRobotVelY = 0;
+
     @Override
     public void initialize() {
         opModeType = OpModeType.TELEOP;
 
+        // Enable velocity compensation mode - continuous turret tracking + lead compensation
+        Globe.VELOCITY_COMP_MODE = true;
+
         if (goalColor == null) {
             goalColor = GoalColor.RED_GOAL;
         }
-
 
         // DO NOT REMOVE — resets FTCLib command scheduler
         super.reset();
@@ -48,8 +70,6 @@ public class GooseTeleop extends CommandOpMode {
 
         // Drivetrain NOT registered — follower.update() called manually in run()
         register(robot.shooter, robot.intake, robot.turret);
-
-        //lightsState = Lights.LightsState.TEAM_COLOR;
 
         driver   = new GamepadEx(gamepad1);
         operator = new GamepadEx(gamepad2);
@@ -69,7 +89,7 @@ public class GooseTeleop extends CommandOpMode {
                 new InstantCommand(() -> robot.intake.toggleLowerSpinning())
         );
 
-        // Circle: Toggle shooter on/off entirely
+        // Cross: Toggle shooter on/off entirely
         driver.getGamepadButton(GamepadKeys.Button.CROSS).whenPressed(
                 new InstantCommand(() -> {
                     shooterOn = !shooterOn;
@@ -78,7 +98,7 @@ public class GooseTeleop extends CommandOpMode {
                 })
         );
 
-        // Cross: Toggle shooting active (full speed vs idle)
+        // Circle: Toggle shooting active (full speed vs idle)
         driver.getGamepadButton(GamepadKeys.Button.CIRCLE).whenPressed(
                 new InstantCommand(() -> {
                     shootingActive = !shootingActive;
@@ -174,30 +194,6 @@ public class GooseTeleop extends CommandOpMode {
                 new InstantCommand(() -> adjustSpeed -= 25)
         );
 
-        operator.getGamepadButton(GamepadKeys.Button.CROSS).whenPressed(
-                new InstantCommand(() -> {
-                    shooterOn = !shooterOn;
-                    if (!shooterOn) robot.shooter.stop();
-                    gamepad1.rumbleBlips(shooterOn ? 2 : 1);
-                })
-        );
-
-        // Cross: Toggle shooting active (full speed vs idle)
-        operator.getGamepadButton(GamepadKeys.Button.CIRCLE).whenPressed(
-                new InstantCommand(() -> {
-                    shootingActive = !shootingActive;
-                    gamepad1.rumbleBlips(shootingActive ? 2 : 1);
-                })
-        );
-
-        // Triangle: Toggle spinup mode (full target speed without feeding - for warmup/testing)
-        operator.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenPressed(
-                new InstantCommand(() -> {
-                    shooterSpinup = !shooterSpinup;
-                    gamepad2.rumbleBlips(shooterSpinup ? 2 : 1);
-                })
-        );
-
         // D-pad up/down: Hood servo fine-tune (handled in run())
 
         super.run();
@@ -211,11 +207,26 @@ public class GooseTeleop extends CommandOpMode {
             gameTimer = new ElapsedTime();
         }
 
+        // Get robot velocity for compensation calculations
+        Vector velocity = robot.follower.getVelocity();
+        double robotVelX = velocity.getXComponent();
+        double robotVelY = velocity.dot(new Vector(1, Math.PI / 2));  // Y component via dot product
+        lastRobotVelX = robotVelX;
+        lastRobotVelY = robotVelY;
+
         // Shooter: set state BEFORE periodic() runs so it has correct targetSpeed
         if (shooterOn) {
-            double targetSpeed = robot.shooter.calculateTargetSpeed(adjustSpeed);
-            if (shootingActive || shooterSpinup) {
-                // Full target speed (shooterSpinup = warmup without feeding)
+            // Calculate base target speed
+            double baseSpeed = robot.shooter.calculateTargetSpeed(adjustSpeed);
+
+            // Calculate velocity compensation for shooter speed
+            double speedComp = ShootingUtils.calculateSpeedCompensation(
+                    robot.follower.getPose(), robotVelX, robotVelY, goalColor);
+            lastSpeedComp = speedComp;
+
+            double targetSpeed = baseSpeed + speedComp;
+
+            if (shootingActive) {
                 robot.shooter.setTargetSpeed(targetSpeed);
             } else {
                 robot.shooter.setTargetSpeed(targetSpeed * SHOOTER_IDLE_FRACTION);
@@ -247,6 +258,10 @@ public class GooseTeleop extends CommandOpMode {
         }
 
         // Telemetry
+        telemetry.addData("=== VELOCITY COMP MODE ===", "");
+        telemetry.addData("Robot Vel", "X: %.1f, Y: %.1f in/s", lastRobotVelX, lastRobotVelY);
+        telemetry.addData("Speed Comp", "%.0f RPM", lastSpeedComp);
+        telemetry.addData("", "");
         telemetry.addData("Pos", "%.1f, %.1f",
                 robot.follower.getPose().getX(), robot.follower.getPose().getY());
         telemetry.addData("Heading", "%.1f deg",
@@ -282,6 +297,8 @@ public class GooseTeleop extends CommandOpMode {
 
     @Override
     public void end() {
+        // Disable velocity compensation mode when OpMode ends
+        Globe.VELOCITY_COMP_MODE = false;
         autoEndPose = robot.follower.getPose();
     }
 }

@@ -1,0 +1,23 @@
+package org.firstinspires.ftc.teamcode.solverslib.commandbase.commands;
+
+
+
+import com.seattlesolvers.solverslib.command.ConditionalCommand;
+import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
+
+import org.firstinspires.ftc.teamcode.solverslib.globals.Robot;
+
+public class RapidShoot extends ParallelCommandGroup {
+    public RapidShoot() {
+
+
+        Robot robot = Robot.getInstance();
+        addCommands(
+                new InstantCommand(() -> robot.hoodServo.set(0.5)),
+                new InstantCommand(() -> robot.intake.start())
+
+
+        );
+    }
+}

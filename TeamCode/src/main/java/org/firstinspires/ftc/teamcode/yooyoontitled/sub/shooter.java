@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils;
 
 public class Shooter extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
-    private static final int offset = 0;
+    private static final int offset = -50;
 
     private static final InterpLUT SPEED_LUT = new InterpLUT();
     static {
@@ -72,9 +72,9 @@ public class Shooter extends SubsystemBase {
         robot.shooterRight.set(-1);
     }
 
-    public double calculateTargetSpeed() {
+    public double calculateTargetSpeed(int adjustSpeed) {
         double distanceFeet = ShootingUtils.getDistanceToTargetFeet(robot.follower.getPose(), Globe.goalColor);
-        return SPEED_LUT.get(distanceFeet) + offset;
+        return SPEED_LUT.get(distanceFeet) + offset + adjustSpeed;
     }
 
     @Override

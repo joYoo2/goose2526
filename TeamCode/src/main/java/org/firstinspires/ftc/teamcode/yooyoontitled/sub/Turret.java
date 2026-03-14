@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.yooyoontitled.sub;
 import static org.firstinspires.ftc.teamcode.yooyoontitled.Globe.*;
 
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils;
 public class Turret extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
 
-    public enum AimMode { MANUAL, AUTO_AIM }
+    public enum AimMode { MANUAL, AUTO_AIM, RETURN_TO_ZERO }
 
     private AimMode mode = AimMode.MANUAL;
 
@@ -52,6 +53,12 @@ public class Turret extends SubsystemBase {
         zeroVoltageTotal = prevVoltage; // turnCount=0 at init
     }
 
+    /** Resets the current turret position to be the new "zero" (forward). */
+    public void resetZero() {
+        double rawTotal = turnCount * VOLTS_PER_TURN + prevVoltage;
+        zeroVoltageTotal = rawTotal;
+    }
+
     public AimMode getMode() { return mode; }
 
     public void setMode(AimMode mode) {
@@ -63,7 +70,14 @@ public class Turret extends SubsystemBase {
     }
 
     public void toggleMode() {
-        setMode(mode == AimMode.AUTO_AIM ? AimMode.MANUAL : AimMode.AUTO_AIM);
+        if (mode == AimMode.AUTO_AIM) {
+            // Disable auto-aim and return to forward position
+            resetPID();
+            mode = AimMode.RETURN_TO_ZERO;
+        } else if (mode == AimMode.MANUAL || mode == AimMode.RETURN_TO_ZERO) {
+            resetPID();
+            mode = AimMode.AUTO_AIM;
+        }
     }
 
     public void resetPID() {
@@ -114,35 +128,56 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         updateEncoder(); // always track wraps, even in MANUAL mode
 
-        if (mode != AimMode.AUTO_AIM) return;
+        if (mode == AimMode.MANUAL) return;
 
-        // Desired turret heading from robot pose + goal position
-        Pose robotPose = robot.follower.getPose();
-        double fieldAngle = ShootingUtils.calculateTargetHeading(robotPose, Globe.goalColor);
-        double desiredDeg = normalizeAngle(
-                Math.toDegrees(fieldAngle - robotPose.getHeading()));
-        desiredDeg = Math.max(-TURRET_LIMIT_DEG, Math.min(TURRET_LIMIT_DEG, desiredDeg));
+        double desiredDeg;
+        if (mode == AimMode.RETURN_TO_ZERO) {
+            desiredDeg = 0;
+        } else {
+            // AUTO_AIM: desired heading from robot pose + goal position
+            Pose robotPose = robot.follower.getPose();
+            double fieldAngle;
+
+            if (Globe.VELOCITY_COMP_MODE) {
+                // Velocity compensation: use lead-compensated heading
+                Vector velocity = robot.follower.getVelocity();
+                double robotVelX = velocity.getXComponent();
+                double robotVelY = velocity.dot(new Vector(1, Math.PI / 2));  // Y component via dot product
+                fieldAngle = ShootingUtils.calculateLeadHeading(robotPose, robotVelX, robotVelY, Globe.goalColor);
+            } else {
+                // Standard aiming: aim directly at goal
+                fieldAngle = ShootingUtils.calculateTargetHeading(robotPose, Globe.goalColor);
+            }
+
+            desiredDeg = normalizeAngle(Math.toDegrees(fieldAngle - robotPose.getHeading()));
+            desiredDeg = Math.max(-TURRET_LIMIT_DEG, Math.min(TURRET_LIMIT_DEG, desiredDeg));
+        }
 
         double currentDeg = getTurretDegrees();
         double error = desiredDeg - currentDeg;
 
         lastError = error;
 
-        // Hysteretic deadband — prevents chattering at the boundary
-        double enterThreshold = TURRET_DEADBAND_DEG;
-        double exitThreshold  = TURRET_DEADBAND_EXIT_DEG;
-        if (inDeadband) {
-            if (Math.abs(error) > exitThreshold) {
-                inDeadband = false;
+        // Velocity comp mode: skip deadband for continuous tracking
+        // Standard mode: use hysteretic deadband to prevent chattering
+        if (!Globe.VELOCITY_COMP_MODE) {
+            double enterThreshold = TURRET_DEADBAND_DEG;
+            double exitThreshold  = TURRET_DEADBAND_EXIT_DEG;
+            if (inDeadband) {
+                if (Math.abs(error) > exitThreshold) {
+                    inDeadband = false;
+                } else {
+                    stop();
+                    if (mode == AimMode.RETURN_TO_ZERO) mode = AimMode.MANUAL;
+                    return;
+                }
             } else {
-                stop();
-                return;
-            }
-        } else {
-            if (Math.abs(error) < enterThreshold) {
-                inDeadband = true;
-                stop();
-                return;
+                if (Math.abs(error) < enterThreshold) {
+                    inDeadband = true;
+                    stop();
+                    if (mode == AimMode.RETURN_TO_ZERO) mode = AimMode.MANUAL;
+                    return;
+                }
             }
         }
 

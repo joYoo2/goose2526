@@ -1,0 +1,102 @@
+package org.firstinspires.ftc.teamcode.opmodes;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
+
+/**
+ * Servo Voltage Sweep — ADC range verification diagnostic.
+ *
+ * Cycles through preset target voltages and drives the turret servo toward each
+ * target using P-control on the raw analog reading.  This confirms whether the
+ * ADC can actually register voltages across the full 0–3.3 V range.
+ *
+ * CONTROLS:
+ *   DPAD RIGHT   — next target voltage
+ *   DPAD LEFT    — previous target voltage
+ *   Cross        — stop servo (manual override, hold to keep stopped)
+ */
+@TeleOp(name = "Servo Voltage Sweep", group = "Test")
+public class ServoVoltageSweep extends LinearOpMode {
+
+    static final String SERVO_NAME  = "turretLeft";
+    static final String SERVO2_NAME = "turretRight";
+    static final String ANALOG_NAME = "turretEncoder";
+
+    // Preset target voltages to sweep through
+    static final double[] TARGETS = { 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.3 };
+
+    // P-control constants (same sign convention as ServoAnalogTest)
+    static final double KP        = 2.0;
+    static final double MAX_POWER = 0.5;
+    static final double DEADBAND  = 0.3; // V — stop driving once within this
+    static final double DIRECTION = -1.0; // flip if servo drives the wrong way
+
+    @Override
+    public void runOpMode() {
+        CRServo     servo    = hardwareMap.get(CRServo.class,    SERVO_NAME);
+        CRServo     servo2   = hardwareMap.get(CRServo.class,    SERVO2_NAME);
+        AnalogInput feedback = hardwareMap.get(AnalogInput.class, ANALOG_NAME);
+
+        waitForStart();
+
+        int targetIndex = 0;
+        boolean stopped = false;
+
+        // Previous button states for edge detection
+        boolean prevRight = false;
+        boolean prevLeft  = false;
+        boolean prevCross = false;
+
+        while (opModeIsActive()) {
+            double voltage = feedback.getVoltage();
+            double adcMax  = feedback.getMaxVoltage();
+            double target  = TARGETS[targetIndex];
+            double error = target - voltage;
+
+            // ── Button edges ──────────────────────────────────────────────────
+            boolean pressRight = gamepad1.dpad_right && !prevRight;
+            boolean pressLeft  = gamepad1.dpad_left  && !prevLeft;
+            boolean pressCross = gamepad1.cross       && !prevCross;
+            prevRight = gamepad1.dpad_right;
+            prevLeft  = gamepad1.dpad_left;
+            prevCross = gamepad1.cross;
+
+            if (pressRight) {
+                targetIndex = (targetIndex + 1) % TARGETS.length;
+                stopped = false;
+            }
+            if (pressLeft) {
+                targetIndex = (targetIndex - 1 + TARGETS.length) % TARGETS.length;
+                stopped = false;
+            }
+            if (pressCross) {
+                stopped = true;
+            }
+
+            // ── P-control ─────────────────────────────────────────────────────
+            double power = 0.0;
+            if (!stopped && Math.abs(error) > DEADBAND) {
+                power = DIRECTION * KP * error;
+                power = Math.max(-MAX_POWER, Math.min(MAX_POWER, power));
+            }
+            servo.setPower(power);
+            servo2.setPower(power);
+
+            // ── Telemetry ─────────────────────────────────────────────────────
+            telemetry.addData("Target",  "%.2f V  (index %d/%d)",
+                    target, targetIndex + 1, TARGETS.length);
+            telemetry.addData("Current", "%.4f V", voltage);
+            telemetry.addData("Error",   "%.4f V", error);
+            telemetry.addData("Output",  "%.3f", power);
+            telemetry.addData("ADC max", "%.2f V", adcMax);
+            telemetry.addLine(stopped ? "STOPPED (Cross pressed)" : "Running P-control");
+            telemetry.addLine("DPAD R/L: next/prev target   Cross: stop");
+            telemetry.update();
+        }
+
+        servo.setPower(0);
+        servo2.setPower(0);
+    }
+}
