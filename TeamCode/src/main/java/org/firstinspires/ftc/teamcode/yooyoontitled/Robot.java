@@ -57,7 +57,7 @@ public class Robot {
     public List<LynxModule> allHubs;
     public LynxModule ControlHub;
 
-    public static final double robotWidth  = 13.25;
+    public static final double robotWidth  = 12.75;
     public static final double robotLength = 17.5;
 
     private static Robot instance = new Robot();

@@ -11,8 +11,10 @@ public class Intake extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
 
     public enum IntakeState { IDLE, INTAKING, REVERSED }
+    public enum LiftMode { AUTO, MANUAL }
 
     private IntakeState state = IntakeState.IDLE;
+    private LiftMode liftMode = LiftMode.AUTO;
     private boolean lowerSpinning = true;
 
     public void setState(IntakeState state) {
@@ -21,6 +23,14 @@ public class Intake extends SubsystemBase {
 
     public IntakeState getState() {
         return state;
+    }
+
+    public void setLiftMode(LiftMode mode) {
+        this.liftMode = mode;
+    }
+
+    public LiftMode getLiftMode() {
+        return liftMode;
     }
 
     public void toggleLowerSpinning() {
@@ -36,6 +46,21 @@ public class Intake extends SubsystemBase {
     public void raiseIntake() {
         robot.intakeLiftLeft.set(1-LIFT_RAISED);
         robot.intakeLiftRight.set(LIFT_RAISED);
+    }
+
+    public void setGateHeight() {
+        robot.intakeLiftLeft.set(1 - LIFT_GOAL);
+        robot.intakeLiftRight.set(LIFT_GOAL);
+    }
+
+    /**
+     * Set intake lift to a custom height. Only takes effect when LiftMode is MANUAL.
+     * @param height Servo position (0.0 to 1.0)
+     */
+    public void setCustomHeight(double height) {
+        double clampedHeight = Math.max(0.0, Math.min(1.0, height));
+        robot.intakeLiftLeft.set(1 - clampedHeight);
+        robot.intakeLiftRight.set(clampedHeight);
     }
 
     @Override
@@ -61,12 +86,15 @@ public class Intake extends SubsystemBase {
         robot.intakeLower.set(lower);
         robot.intakeUpper.set(upper);
 
-        // Lift: raised when intaking or reversing, lowered when idle
-        if (state == IntakeState.INTAKING || state == IntakeState.REVERSED) {
-            raiseIntake();
-        } else {
-            lowerIntake();
+        // Lift: only auto-control if in AUTO mode
+        if (liftMode == LiftMode.AUTO) {
+            if (state == IntakeState.INTAKING || state == IntakeState.REVERSED) {
+                raiseIntake();
+            } else {
+                lowerIntake();
+            }
         }
+        // If MANUAL mode, lift servos keep their last set position
 
         // Kick servo: forward when shooting/ejecting, reverse when intaking, stopped otherwise
 

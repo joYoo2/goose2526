@@ -28,6 +28,8 @@ public class Globe {
     public static final double LIFT_LOWERED  = 0.17;
     public static final double LIFT_RAISED = 0.27;
 
+    public static final double LIFT_GOAL = 0.6;
+
 
 
     // Stopper servo — gates ball feed (tune positions on robot)
@@ -35,7 +37,7 @@ public class Globe {
     public static final double STOPPER_CLOSED = 0.0;
 
     // Hood servo — static for now
-    public static final double HOOD_STATIC_POS = 1;  // TODO: tune on robot
+    public static final double HOOD_STATIC_POS = 0.8;  // TODO: tune on robot
 
     // Shooter velocity constants
     public static double SHOOTER_IDLE_FRACTION = 0.75; // fraction of target speed when idle
@@ -53,9 +55,10 @@ public class Globe {
 
     // Turret servos (CRServo — setPower: 0=stop, positive=right, negative=left)
     // KP/KI/KD live in Turret.java as public static fields (tunable via FTC Dashboard or TurretPIDTuning opmode)
-    public static final double TURRET_SPEED        = 0.5;   // max power, tune on robot
-    public static final double TURRET_DEADBAND_DEG = 7.0;   // stop within this many degrees of center
-    public static double TURRET_LIMIT_DEG    = 120.0; // hard angle limit to prevent wire wrap
+    public static final double TURRET_SPEED        = 0.7;   // max power, tune on robot
+    public static final double TURRET_DEADBAND_DEG = 3.0;   // stop within this many degrees of center
+    public static double TURRET_LIMIT_DEG    = 110.0; // hard angle limit to prevent wire wrap
+    public static final double TURRET_OFFSET       = 1.0;   // inches behind robot center
 
     // Limelight / April Tag
     public static final int LIMELIGHT_PIPELINE  = 0;  // pipeline index configured for AprilTags

@@ -14,12 +14,13 @@ import org.firstinspires.ftc.teamcode.yooyoontitled.ShootingUtils;
 public class Turret extends SubsystemBase {
     private final Robot robot = Robot.getInstance();
 
-    public enum AimMode { MANUAL, AUTO_AIM, RETURN_TO_ZERO }
+    public enum AimMode { MANUAL, AUTO_AIM, RETURN_TO_ZERO, AIM_AT_POSE }
 
     private AimMode mode = AimMode.MANUAL;
+    private Pose targetPose = null;  // For AIM_AT_POSE mode
 
     // Encoder constants
-    static final double VOLTS_PER_TURN = 3.2;
+    static final double VOLTS_PER_TURN = 3.25;
     static final double TURRET_DEG_PER_SERVO_TURN = 360.0 * 28.0 / 70.0; // = 144.0
     public static final double DIRECTION = -1.0; // flip if turret drives wrong way
 
@@ -32,10 +33,10 @@ public class Turret extends SubsystemBase {
     // PID gains — public static so FTC Dashboard can tune live
     public static double KP = 0.02;
     public static double KI = 0.0;
-    public static double KD = 0.0; // zeroed: derivative on noisy analog+pose signal causes oscillation
+    public static double KD = 0.001; // zeroed: derivative on noisy analog+pose signal causes oscillation
 
     // Anti-shake: power below this threshold is rounded to zero
-    public static final double MIN_POWER = 0.10;
+    public static final double MIN_POWER = 0.05;
     // Hysteresis: once stopped inside deadband, don't restart until error exceeds this
     static final double TURRET_DEADBAND_EXIT_DEG = 3.0;
 
@@ -67,6 +68,16 @@ public class Turret extends SubsystemBase {
             resetPID();
             stop();
         }
+    }
+
+    /**
+     * Set turret to aim as if robot is at a specific pose (for autonomous pre-aiming).
+     * @param pose The pose to aim from (typically the final shooting position)
+     */
+    public void aimAtPose(Pose pose) {
+        this.targetPose = pose;
+        this.mode = AimMode.AIM_AT_POSE;
+        resetPID();
     }
 
     public void toggleMode() {
@@ -133,8 +144,18 @@ public class Turret extends SubsystemBase {
         double desiredDeg;
         if (mode == AimMode.RETURN_TO_ZERO) {
             desiredDeg = 0;
+        } else if (mode == AimMode.AIM_AT_POSE) {
+            // AIM_AT_POSE: aim as if robot is at targetPose (for autonomous pre-aiming)
+            if (targetPose == null) {
+                // Safety fallback if targetPose not set
+                desiredDeg = 0;
+            } else {
+                double fieldAngle = ShootingUtils.calculateTargetHeading(targetPose, Globe.goalColor);
+                desiredDeg = normalizeAngle(Math.toDegrees(fieldAngle - targetPose.getHeading()));
+                desiredDeg = Math.max(-TURRET_LIMIT_DEG, Math.min(TURRET_LIMIT_DEG, desiredDeg));
+            }
         } else {
-            // AUTO_AIM: desired heading from robot pose + goal position
+            // AUTO_AIM: desired heading from current robot pose + goal position
             Pose robotPose = robot.follower.getPose();
             double fieldAngle;
 
