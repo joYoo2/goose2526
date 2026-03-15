@@ -26,9 +26,9 @@ public class Globe {
 
     // Intake lift servo positions (TBD — tune on robot)
     public static final double LIFT_LOWERED  = 0.17;
-    public static final double LIFT_RAISED = 0.27;
+    public static final double LIFT_RAISED = 0.17;
 
-    public static final double LIFT_GOAL = 0.6;
+    public static final double LIFT_GOAL = 0.75;
 
 
 

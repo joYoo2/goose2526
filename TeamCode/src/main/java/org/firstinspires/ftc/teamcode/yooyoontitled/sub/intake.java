@@ -15,7 +15,7 @@ public class Intake extends SubsystemBase {
 
     private IntakeState state = IntakeState.IDLE;
     private LiftMode liftMode = LiftMode.AUTO;
-    private boolean lowerSpinning = true;
+    private boolean lowerSpinning = false;
 
     public void setState(IntakeState state) {
         this.state = state;
